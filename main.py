@@ -1,14 +1,30 @@
 import telebot
 import config
-import random
+import datetime
+import sqlite3
 from telebot import types
 
 bot = telebot.TeleBot(config.TOKEN)
+db = sqlite3.connect('./privateUsers.db', check_same_thread=False)
+sql = db.cursor()
 
 @bot.message_handler(commands=['start'])
 def welcome(message):
+    sql.execute('SELECT * from users WHERE user_id = ?', (message.chat.id,))
+    if sql.fetchone() == None:
+        sql.execute('INSERT INTO users VALUES (NULL, ?, ?, ?)', (message.chat.id , 0, 0))
+        db.commit()
+    # else:
+    #     if sql.execute('SELECT * from users WHERE user_id = ?', (message.chat.id,)).fetchone()[2] == 0:
+    #         bot.send_message(message.chat.id, 'подписка недействительна')
+    #     else:
+    #         now = datetime.datetime.now()
+    #         if now.strftime("%d-%m-%Y") > sql.execute('SELECT * from users WHERE user_id = ?', (message.chat.id,)).fetchone()[3] == 0:
+    #             bot.send_message(message.chat.id, 'подписка закончилась')
+    #         else:
+    #             bot.send_message(message.chat.id, 'подписка действительна до ' + sql.execute('SELECT * from users WHERE user_id = ?', (message.chat.id,)).fetchone()[3])
 
-    # keyboard
+
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True, row_width=2)
     rates = types.KeyboardButton("🛒 Тарифы")
     subscribe = types.KeyboardButton("📊 Подписка")
@@ -51,6 +67,14 @@ def lalala(message):
             markup.add(subsOne, subsThree, backMenu)
 
             bot.send_message(message.chat.id, '<b>Выберите длительность доступа в 🔒Секретный Канал</b>', parse_mode='html', reply_markup=markup)
+        elif message.text == '📊 Подписка':
+            if sql.execute('SELECT id from users WHERE user_id = ? and isSub = ?', (message.chat.id, 0,)).fetchone() != None:
+                data = sql.execute('SELECT id from users WHERE user_id = ? and isSub = ?', (message.chat.id, 0,)).fetchone()[0]
+                sql.execute('UPDATE users SET isSub=? WHERE id=?', (1, data))
+                db.commit()
+                
+            elif sql.execute('SELECT * from users WHERE user_id = ? and isSub = ?', (message.chat.id, 1,)).fetchone() != None:
+                bot.send_message(message.chat.id, 'подписка действительна')
 
 @bot.callback_query_handler(func=lambda call: True)
 def callback_inline(call):
@@ -93,33 +117,8 @@ def callback_inline(call):
             elif call.data == "backMenu":
                 bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text='Вы в главном меню', reply_markup=None)
 
-            # remove inline buttons
-            # bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text="😊 Как дела?",
-            #     reply_markup=None)
-
-            # # show alert
-            # bot.answer_callback_query(callback_query_id=call.id, show_alert=False,
-            #     text="ЭТО ТЕСТОВОЕ УВЕДОМЛЕНИЕ!!11")
-
     except Exception as e:
         print(repr(e))
 
-# @bot.callback_query_handler(func=lambda call: True)
-# def callback_inline(call):
-#     try:
-#         if call.message:
-#             if call.data == "backRate":
-#                 markup = types.InlineKeyboardMarkup(row_width=1)
-#                 subsOne = types.InlineKeyboardButton("1 Месяц", callback_data='subsOne')
-#                 subsTree = types.InlineKeyboardButton("3 Месяца (-20%)", callback_data='subsTree')
 
-#                 markup.add(subsOne, subsTree)
-
-#                 bot.send_message(chat_id=call.message.chat.id, message_id=call.message.message_id, text='<b>Выберите длительность доступа в 🔒Секретный Канал</b>', parse_mode='html', reply_markup=markup)
-
-#     except Exception as e:
-#         print(repr(e))
-
-
-# RUN
 bot.polling(none_stop=True)
