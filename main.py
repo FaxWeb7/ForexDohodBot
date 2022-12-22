@@ -66,7 +66,6 @@ def lalala(message):
             markup.add(subsOne, subsThree, backMenu)
 
             bot.send_message(message.chat.id, '<b>Выберите длительность доступа в 🔒Секретный Канал</b>', parse_mode='html', reply_markup=markup)
-
         elif message.text == '📊 Подписка':
             if sql.execute('SELECT untill from users WHERE user_id = ?', (message.chat.id,)).fetchone()[0] != '0':
                 nowTs = time.time()
@@ -97,7 +96,6 @@ def lalala(message):
                 markup.add(subscribeBtn)
 
                 bot.send_message(message.chat.id, 'У вас нет активных подписок. Перейти к покупке?', reply_markup=markup)
-
         elif message.text == 'Добавить подписчика в секретный канал':
             if message.chat.id == creator_id:
                 msg = bot.send_message(message.chat.id, 'Введите данные для private-user через пробел (12345678 22-22-2022 22:22)')
