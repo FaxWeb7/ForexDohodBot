@@ -3,6 +3,7 @@ import config
 import datetime
 import requests
 import sqlite3
+import time
 from telebot import types
 
 bot = telebot.TeleBot(config.TOKEN)
@@ -18,16 +19,6 @@ def welcome(message):
     if sql.fetchone() == None:
         sql.execute('INSERT INTO users VALUES (NULL, ?, ?, ?, ?)', (message.chat.id , 0, 0, 0))
         db.commit()
-    # else:
-    #     if sql.execute('SELECT * from users WHERE user_id = ?', (message.chat.id,)).fetchone()[2] == 0:
-    #         bot.send_message(message.chat.id, 'подписка недействительна')
-    #     else:
-    #         now = datetime.datetime.now()
-    #         if now.strftime("%d-%m-%Y") > sql.execute('SELECT * from users WHERE user_id = ?', (message.chat.id,)).fetchone()[3] == 0:
-    #             bot.send_message(message.chat.id, 'подписка закончилась')
-    #         else:
-    #             bot.send_message(message.chat.id, 'подписка действительна до ' + sql.execute('SELECT * from users WHERE user_id = ?', (message.chat.id,)).fetchone()[3])
-
 
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True, row_width=2)
     rates = types.KeyboardButton("🛒 Тарифы")
@@ -77,24 +68,39 @@ def lalala(message):
             bot.send_message(message.chat.id, '<b>Выберите длительность доступа в 🔒Секретный Канал</b>', parse_mode='html', reply_markup=markup)
 
         elif message.text == '📊 Подписка':
-            if sql.execute('SELECT id from users WHERE user_id = ? and isSub = ?', (message.chat.id, 0,)).fetchone() != None:
+            if sql.execute('SELECT untill from users WHERE user_id = ?', (message.chat.id,)).fetchone()[0] != '0':
+                nowTs = time.time()
+                untill = str(sql.execute('SELECT untill from users WHERE user_id = ?', (message.chat.id,)).fetchone()).replace("'","").replace("(","").replace(")","").replace(",","")
+                untillTs = time.mktime(datetime.datetime.strptime(untill, "%d-%m-%Y %H:%M").timetuple())
+
+                if untillTs - nowTs <= 0:
+                    sql.execute('UPDATE users SET isSub=?, untill=?, subLink=? WHERE user_id=?', (0,0,0,message.chat.id))
+                    db.commit()
+                    markup = types.InlineKeyboardMarkup()
+                    subscribeBtn = types.InlineKeyboardButton("🛒 Перейти к покупке", callback_data='backRate')
+                    markup.add(subscribeBtn)
+
+                    bot.send_message(message.chat.id, 'Ваша подписка на <b>Секретный Канал ForexDohod</b> закончилась\nПерейти к покупке?', parse_mode='html' ,reply_markup=markup)
+                
+                elif sql.execute('SELECT * from users WHERE user_id = ? and isSub = ?', (message.chat.id, 1,)).fetchone() != None:
+                    untill = sql.execute('SELECT untill from users WHERE user_id = ?', (message.chat.id,)).fetchone()[0]
+                    subLink = sql.execute('SELECT subLink from users WHERE user_id = ?', (message.chat.id,)).fetchone()[0]
+                    markup = types.InlineKeyboardMarkup()
+                    subscribeBtn = types.InlineKeyboardButton("Перейти в Секретный Канал ForexDohod", url=subLink ,callback_data='privateLink')
+                    markup.add(subscribeBtn)
+
+                    bot.send_message(message.chat.id, 'Ваша подписка на <b>Секретный Канал ForexDohod</b> действует до ' + untill + '\n\n<b>Ваши приватные ссылки для доступа  👇</b>\n⚠ Если у вас появляется ошибка ссылка не действительна или чат не существует или вы не можете войти в сообщество, просто попробуйте ещё раз через пару минут (особенность Telegram)', parse_mode='html' ,reply_markup=markup)
+
+            elif sql.execute('SELECT id from users WHERE user_id = ? and isSub = ?', (message.chat.id, 0,)).fetchone() != None:
                 markup = types.InlineKeyboardMarkup()
                 subscribeBtn = types.InlineKeyboardButton("🛒 Перейти к покупке", callback_data='backRate')
                 markup.add(subscribeBtn)
 
                 bot.send_message(message.chat.id, 'У вас нет активных подписок. Перейти к покупке?', reply_markup=markup)
-            elif sql.execute('SELECT * from users WHERE user_id = ? and isSub = ?', (message.chat.id, 1,)).fetchone() != None:
-                untill = sql.execute('SELECT untill from users WHERE user_id = ?', (message.chat.id,)).fetchone()[0]
-                subLink = sql.execute('SELECT subLink from users WHERE user_id = ?', (message.chat.id,)).fetchone()[0]
-                markup = types.InlineKeyboardMarkup()
-                subscribeBtn = types.InlineKeyboardButton("Перейти в Секретный Канал ForexDohod", url=subLink ,callback_data='privateLink')
-                markup.add(subscribeBtn)
-
-                bot.send_message(message.chat.id, 'Ваша подписка на <b>Секретный Канал ForexDohod</b> действует до ' + untill + '\n\n<b>Ваши приватные ссылки для доступа  👇</b>\n⚠ Если у вас появляется ошибка ссылка не действительна или чат не существует или вы не можете войти в сообщество, просто попробуйте ещё раз через пару минут (особенность Telegram)', parse_mode='html' ,reply_markup=markup)
 
         elif message.text == 'Добавить подписчика в секретный канал':
             if message.chat.id == creator_id:
-                msg = bot.send_message(message.chat.id, 'Введите данные для private-user (user_id, untill) через пробел')
+                msg = bot.send_message(message.chat.id, 'Введите данные для private-user через пробел (12345678 22-22-2022 22:22)')
                 bot.register_next_step_handler(msg, parsePrivateUser)
             else:
                 bot.send_message(message.chat.id, 'Эта функция недоступна для вас')
@@ -208,18 +214,21 @@ def callback_inline(call):
 def parsePrivateUser(message):
     data = message.text.split(' ')
     if sql.execute('SELECT id from users WHERE user_id = ? and isSub = ?', (data[0], 0,)).fetchone() != None:
-        chatLink = bot.create_chat_invite_link(message.chat.id) ###############################S
-        sql.execute('UPDATE users SET isSub=?, untill=?, subLink=? WHERE user_id=?', (1, data[1], chatLink, data[0]))
+        sql.execute('UPDATE users SET isSub=?, untill=? WHERE user_id=?', (1, data[1] + " " + data[2], data[0]))
         db.commit()
-        bot.send_message(message.chat.id, 'Подписка для пользователя с id ' + data[0] + ' успешно оформлена до ' + data[1])
-        bot.send_message(data[0], 'Ваша подписка успешно активирована до ' + data[1])
+        untill = str(sql.execute('SELECT untill from users WHERE user_id = ?', (message.chat.id,)).fetchone()).replace("'","").replace("(","").replace(")","").replace(",","")
+        untillTs = time.mktime(datetime.datetime.strptime(untill, "%d-%m-%Y %H:%M").timetuple())
+        chatLink = bot.create_chat_invite_link(-1001871050533, member_limit=1, expire_date=untillTs)
+        sql.execute('UPDATE users SET subLink=? WHERE user_id=?', (str(chatLink.invite_link), data[0]))
+        db.commit()
+        bot.send_message(message.chat.id, 'Подписка для пользователя с id ' + data[0] + ' успешно оформлена до ' + data[1] + " " + data[2])
+        bot.send_message(data[0], 'Ваша подписка успешно активирована <b>до ' + data[1] + " " + data[2] + "</b>", parse_mode='html')
     elif sql.execute('SELECT * from users WHERE user_id = ? and isSub = ?', (data[0], 1,)).fetchone() != None:
         bot.send_message(message.chat.id, 'у этого пользователя уже оформлена подписка')
     elif sql.execute('SELECT * from users WHERE user_id = ? and isSub = ?', (data[0], 0,)).fetchone() == None:
         bot.send_message(message.chat.id, 'такого пользователя не существует')
 
 def checkPayment(message):
-    print(message)
     bot.send_message(message.chat.id, '✅ Спасибо! Квитанция отправлена на проверку, вы получите уведомление как только её проверят.')
     if message.text == None:
         bot.send_photo(creator_id, photo=message.photo[0].file_id, caption=message.caption)
