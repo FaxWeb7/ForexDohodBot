@@ -13,7 +13,7 @@ sql = db.cursor()
 
 creator_id = 1056056149
 pricePerMonth = '70'
-pricePer3Months =  '140'
+pricePer3Months =  '170'
 walletAddress = 'TRoha2nsRGVDeDQomuFhtCXBo1uRBqs2W5'
 cardNumber = '2200700408479524'
 qiwiNumber = '+79260534553'
