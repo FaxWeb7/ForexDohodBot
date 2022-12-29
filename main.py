@@ -23,7 +23,7 @@ qiwiNumber = '+79260534553'
 @bot.message_handler(commands=['start'])
 def welcome(message):
     if sql.execute('SELECT * from users WHERE user_id = ?', (message.chat.id,)).fetchone() == None:
-        sql.execute('INSERT INTO users VALUES (NULL, ?, ?, ?, ?)', (message.chat.id , 0, 0, 0))
+        sql.execute('INSERT INTO users VALUES (NULL, ?, ?, ?)', (message.chat.id , 0, 0))
         db.commit()
 
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True, row_width=2)
@@ -89,7 +89,7 @@ def Buttons(message):
                 untillTs = time.mktime(datetime.datetime.strptime(untill, "%d-%m-%Y %H:%M").timetuple())
 
                 if untillTs - nowTs <= 0:
-                    sql.execute('UPDATE users SET isSub=?, untill=?, subLink=? WHERE user_id=?', (0,0,0,message.chat.id))
+                    sql.execute('UPDATE users SET isSub=?, untill=? WHERE user_id=?', (0,0,message.chat.id))
                     db.commit()
                     markup = types.InlineKeyboardMarkup()
                     subscribeBtn = types.InlineKeyboardButton("🛒 Перейти к покупке", callback_data='backRate')
@@ -99,12 +99,11 @@ def Buttons(message):
                 
                 elif sql.execute('SELECT * from users WHERE user_id = ? and isSub = ?', (message.chat.id, 1,)).fetchone() != None:
                     untill = sql.execute('SELECT untill from users WHERE user_id = ?', (message.chat.id,)).fetchone()[0]
-                    subLink = sql.execute('SELECT subLink from users WHERE user_id = ?', (message.chat.id,)).fetchone()[0]
                     markup = types.InlineKeyboardMarkup()
-                    subscribeBtn = types.InlineKeyboardButton("Перейти в Секретный Канал ForexDohod", url=subLink ,callback_data='privateLink')
+                    subscribeBtn = types.InlineKeyboardButton("👉 Секретный Канал ForexDohod", callback_data='privateLink')
                     markup.add(subscribeBtn)
 
-                    bot.send_message(message.chat.id, 'Ваша подписка на <b>Секретный Канал ForexDohod</b> действует до ' + untill + '\n\n<b>Ваша приватная ссылка для доступа 👇</b>\n⚠ Если у вас появляется ошибка ссылка не действительна или чат не существует или вы не можете войти в сообщество, просто попробуйте ещё раз через пару минут (особенность Telegram)', parse_mode='html' ,reply_markup=markup)
+                    bot.send_message(message.chat.id, 'Ваша подписка на <b>Секретный Канал ForexDohod</b> действует до ' + untill + '\n\n<b>Для получения доступа к каналу нажмите на соответствующую кнопку ниже 👇</b>\n\n⚠ Если у вас появляется ошибка ссылка не действительна или чат не существует или вы не можете войти в сообщество, просто попробуйте ещё раз через пару минут (особенность Telegram)', parse_mode='html' ,reply_markup=markup)
 
             elif sql.execute('SELECT id from users WHERE user_id = ? and isSub = ?', (message.chat.id, 0,)).fetchone() != None:
                 markup = types.InlineKeyboardMarkup()
@@ -121,13 +120,13 @@ def Buttons(message):
                 usersId = sql.execute('SELECT user_id from users WHERE isSub=?', (0,)).fetchall()
                 privateUsersId = sql.execute('SELECT * from users WHERE isSub=?', (1,)).fetchall()
 
-                bot.send_message(message.chat.id, f'<b>Статистика пользователей ForexDohodBot</b>\n\nКоличество пользователей: {str(len(users))}\nКоличество пользоватей с подпиской: {str(len(privateUsers))}\nПроцент пользователей с подпиской: {round((len(privateUsers)/len(users))*100, 2)}%\n\nИнформация о пользователях без подписки:\n{parseUsers(usersId)}\n\nИнформация о пользователях с подпиской (id, user_id, isSub, untill, subLink):\n{parseUsers(privateUsersId)}\n\nИнформация о всех пользователях (id, user_id, isSub, untill, subLink):\n{parseUsers(users)}', parse_mode='html')
+                bot.send_message(message.chat.id, f'<b>Статистика пользователей ForexDohodBot</b>\n\nКоличество пользователей: {str(len(users))}\nКоличество пользоватей с подпиской: {str(len(privateUsers))}\nПроцент пользователей с подпиской: {round((len(privateUsers)/len(users))*100, 2)}%\n\nИнформация о пользователях без подписки:\n{parseUsers(usersId)}\n\nИнформация о пользователях с подпиской (id, user_id, isSub, untill):\n{parseUsers(privateUsersId)}\n\nИнформация о всех пользователях (id, user_id, isSub, untill):\n{parseUsers(users)}', parse_mode='html')
             else:
                 bot.send_message(message.chat.id, 'Эта функция недоступна для вас')
 
         elif message.text == 'Изменить данные пользователя':
             if message.chat.id == creator_id:
-                msg = bot.send_message(message.chat.id, 'Введите измененные данные пользователя через пробел (12345678 1 22-22-2022 22:22 https://example.com) (user_id, isSub, untill, subLink) (user_id, 0 - обнулить)')
+                msg = bot.send_message(message.chat.id, 'Введите измененные данные пользователя через пробел (12345678 1 22-22-2022 22:22 ) (user_id, isSub, untill) (user_id, 0 - обнулить)')
                 bot.register_next_step_handler(msg, changeUserData)
             else:
                 bot.send_message(message.chat.id, 'Эта функция недоступна для вас')
@@ -159,7 +158,15 @@ def Buttons(message):
 def InlineCallback(call):
     try:
         if call.message:
-            if call.data == "backMenu":
+            if call.data == 'privateLink':
+                subLink = bot.create_chat_invite_link(-1001871050533, member_limit=1, expire_date=(int(time.time())+10))
+                markup = types.InlineKeyboardMarkup()
+                subscribeBtn = types.InlineKeyboardButton("👉 ВСТУПИТЬ 👈", url=str(subLink.invite_link))
+                markup.add(subscribeBtn)
+
+                bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text='✅ Вход открыт, ссылка действительна 10 секунд', reply_markup=markup)
+
+            elif call.data == "backMenu":
                 bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text='Вы в главном меню', reply_markup=None) 
 
             elif call.data == "backRate":
@@ -234,13 +241,7 @@ def addPrivateUser(message):
         sql.execute('UPDATE users SET isSub=?, untill=? WHERE user_id=?', (1, data[1] + " " + data[2], data[0]))
         db.commit()
 
-        untill = str(sql.execute('SELECT untill from users WHERE user_id = ?', (message.chat.id,)).fetchone()).replace("'","").replace("(","").replace(")","").replace(",","")
-        untillTs = time.mktime(datetime.datetime.strptime(untill, "%d-%m-%Y %H:%M").timetuple())
-        chatLink = bot.create_chat_invite_link(-1001871050533, member_limit=1, expire_date=untillTs)
-        sql.execute('UPDATE users SET subLink=? WHERE user_id=?', (str(chatLink.invite_link), data[0]))
-        db.commit()
-
-        bot.send_message(data[0], 'Ваша подписка успешно активирована <b>до ' + data[1] + " " + data[2] + ".</b>Чтобы получить ссылку доступа, выберите в меню кнопку 'Подписка'.", parse_mode='html')
+        bot.send_message(data[0], 'Ваша подписка успешно активирована <b>до ' + data[1] + " " + data[2] + ".</b> Чтобы получить ссылку доступа, выберите в меню кнопку 'Подписка'.", parse_mode='html')
         bot.send_message(message.chat.id, 'Подписка для пользователя с id ' + data[0] + ' успешно оформлена до ' + data[1] + " " + data[2])
 
     elif sql.execute('SELECT * from users WHERE user_id = ? and isSub = ?', (data[0], 1,)).fetchone() != None:
@@ -248,16 +249,16 @@ def addPrivateUser(message):
         
     elif sql.execute('SELECT * from users WHERE user_id = ? and isSub = ?', (data[0], 0,)).fetchone() == None:
         bot.send_message(message.chat.id, 'такого пользователя не существует')
-    
+
 def changeUserData(message):
     data = message.text.split(' ')
     if sql.execute('SELECT id from users WHERE user_id = ?', (data[0],)).fetchone() != None:
         if data[1] == '0':
-            sql.execute('UPDATE users SET isSub=?, untill=?, subLink=? WHERE user_id=?', (0, 0, 0, data[0]))
+            sql.execute('UPDATE users SET isSub=?, untill=? WHERE user_id=?', (0, 0, data[0]))
             db.commit()
             bot.send_message(message.chat.id, 'данные пользователя успешно изменены')
         else:
-            sql.execute('UPDATE users SET isSub=?, untill=?, subLink=? WHERE user_id=?', (data[1], data[2] + ' ' + data[3], data[4], data[0]))
+            sql.execute('UPDATE users SET isSub=?, untill=? WHERE user_id=?', (data[1], data[2] + ' ' + data[3], data[0]))
             db.commit()
             bot.send_message(message.chat.id, 'данные пользователя успешно изменены')
 
@@ -267,7 +268,7 @@ def changeUserData(message):
 def deleteUser(message):
     data = message.text
     if sql.execute('SELECT id from users WHERE user_id = ? and isSub = ?', (data, 1,)).fetchone() != None:
-        sql.execute('UPDATE users SET isSub=?, untill=?, subLink=? WHERE user_id=?', (0, '0', '0', data))
+        sql.execute('UPDATE users SET isSub=?, untill=? WHERE user_id=?', (0, 0, data))
         db.commit()
 
         bot.kick_chat_member(-1001871050533, data)
@@ -285,7 +286,7 @@ def deleteUser(message):
 def writeToUser(message):
     data = message.text.split(' ')
     if sql.execute('SELECT id from users WHERE user_id = ?', (data[0],)).fetchone() != None:
-        bot.send_message(data, f'<b>Сообщение от администратора:</b>\n\n{data[1]}', parse_mode='html')
+        bot.send_message(data[0], f'<b>Сообщение от администратора:</b>\n\n{data[1]}', parse_mode='html')
         bot.send_message(message.chat.id, 'Ваше сообщение успешно отправлено пользователю')
 
     elif sql.execute('SELECT * from users WHERE user_id = ? ', (data[0],)).fetchone() == None:
