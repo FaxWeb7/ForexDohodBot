@@ -266,15 +266,6 @@ def addPrivateUser(message):
         markup.add(oneMonth, threeMonths)
 
         bot.send_message(message.chat.id, 'Выберите период подписки для пользователя с айди:' + id, reply_markup=markup)
-        # if str(data[1]) == '1':
-        #     sql.execute('UPDATE users SET isSub=?, untill=? WHERE user_id=?', (1, data[1] + " " + data[2], data[0]))
-        #     db.commit()
-
-        #     bot.send_message(data[0], "Ваша подписка успешно активирована <b>до .</b> Чтобы получить ссылку доступа, выберите в меню кнопку 'Подписка'.", parse_mode='html')
-        #     bot.send_message(message.chat.id, 'Подписка для пользователя с id ' + data[0] + ' успешно оформлена до ')
-
-        # elif str(data[1]) == '3':
-        #     pass
 
     elif sql.execute('SELECT * from users WHERE user_id = ? and isSub = ?', (id, 1,)).fetchone() != None:
         bot.send_message(message.chat.id, 'у этого пользователя уже оформлена подписка')
