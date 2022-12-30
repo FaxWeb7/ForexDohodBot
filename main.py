@@ -4,6 +4,7 @@ import datetime
 import sqlite3
 import time
 from telebot import types
+from datetime import datetime, timedelta
 
 
 ###  MAIN CONSTANTS  ###
@@ -86,7 +87,7 @@ def Buttons(message):
             if sql.execute('SELECT untill from users WHERE user_id = ?', (message.chat.id,)).fetchone()[0] != '0':
                 nowTs = time.time()
                 untill = str(sql.execute('SELECT untill from users WHERE user_id = ?', (message.chat.id,)).fetchone()).replace("'","").replace("(","").replace(")","").replace(",","")
-                untillTs = time.mktime(datetime.datetime.strptime(untill, "%d-%m-%Y %H:%M").timetuple())
+                untillTs = time.mktime(datetime.strptime(untill, "%Y-%m-%d %H:%M:%S").timetuple())
 
                 if untillTs - nowTs <= 0:
                     sql.execute('UPDATE users SET isSub=?, untill=? WHERE user_id=?', (0,0,message.chat.id))
@@ -126,14 +127,14 @@ def Buttons(message):
 
         elif message.text == 'Изменить данные пользователя':
             if message.chat.id == creator_id:
-                msg = bot.send_message(message.chat.id, 'Введите измененные данные пользователя через пробел (12345678 1 22-22-2022 22:22 ) (user_id, isSub, untill) (user_id, 0 - обнулить)')
+                msg = bot.send_message(message.chat.id, 'Введите измененные данные пользователя через пробел (12345678 1 22-22-2022 22:22:22 ) (user_id, isSub, untill) (user_id, 0 - обнулить)')
                 bot.register_next_step_handler(msg, changeUserData)
             else:
                 bot.send_message(message.chat.id, 'Эта функция недоступна для вас')
 
         elif message.text == 'Добавить подписчика в секретный канал':
             if message.chat.id == creator_id:
-                msg = bot.send_message(message.chat.id, 'Введите данные для private-user через пробел (12345678 22-22-2022 22:22)')
+                msg = bot.send_message(message.chat.id, 'Введите id пользователя')
                 bot.register_next_step_handler(msg, addPrivateUser)
             else:
                 bot.send_message(message.chat.id, 'Эта функция недоступна для вас')
@@ -165,6 +166,27 @@ def InlineCallback(call):
                 markup.add(subscribeBtn)
 
                 bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text='✅ Вход открыт, ссылка действительна 10 секунд', reply_markup=markup)
+
+            elif call.data == 'addOneMonthUser':
+                untill = str(datetime.now() + timedelta(days=30)).split('.')[0]
+                id = call.message.text.split(':')[1]
+
+                sql.execute('UPDATE users SET isSub=?, untill=? WHERE user_id=?', (1, untill, id))
+                db.commit()
+
+                bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text='Подписчику с айди ' + id + ' оформлен доступ к секретному каналу до ' + str(sql.execute('SELECT untill from users WHERE user_id=?', (id,)).fetchone()[0]))
+                bot.send_message(id, f"Ваша подписка успешно активирована <b>до {str(sql.execute('SELECT untill from users WHERE user_id=?', (id,)).fetchone()[0])}.</b> Чтобы получить ссылку доступа, выберите в меню кнопку 'Подписка'.", parse_mode='html')
+
+            elif call.data == 'addThreeMonthsUser':
+                untill = str(datetime.now() + timedelta(days=90)).split('.')[0]
+                id = call.message.text.split(':')[1]
+
+                sql.execute('UPDATE users SET isSub=?, untill=? WHERE user_id=?', (1, untill, id))
+                db.commit()
+
+                bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text='Подписчику с айди ' + id + ' оформлен доступ к секретному каналу до ' + str(sql.execute('SELECT untill from users WHERE user_id=?', (id,)).fetchone()[0]))
+                bot.send_message(id, f"Ваша подписка успешно активирована <b>до {str(sql.execute('SELECT untill from users WHERE user_id=?', (id,)).fetchone()[0])}.</b> Чтобы получить ссылку доступа, выберите в меню кнопку 'Подписка'.", parse_mode='html')
+
 
             elif call.data == "backMenu":
                 bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text='Вы в главном меню', reply_markup=None) 
@@ -231,23 +253,33 @@ def checkPayment(message):
     bot.send_message(message.chat.id, '✅ Спасибо! Квитанция отправлена на проверку, вы получите уведомление как только её проверят.')
     if message.text == None:
         bot.send_photo(creator_id, photo=message.photo[0].file_id, caption=message.caption)
-        bot.send_message(creator_id, 'Пользователь с айди ' + str(message.chat.id) + ' приобрёл подписку')
+        bot.send_message(creator_id, f'Пользователь с айди `{str(message.chat.id)}` приобрёл подписку', parse_mode='MARKDOWN')
     else:
         bot.send_message(creator_id, message.text)
 
 def addPrivateUser(message):
-    data = message.text.split(' ')
-    if sql.execute('SELECT id from users WHERE user_id = ? and isSub = ?', (data[0], 0,)).fetchone() != None:
-        sql.execute('UPDATE users SET isSub=?, untill=? WHERE user_id=?', (1, data[1] + " " + data[2], data[0]))
-        db.commit()
+    id = message.text
+    if sql.execute('SELECT id from users WHERE user_id = ? and isSub = ?', (id, 0,)).fetchone() != None:
+        markup = types.InlineKeyboardMarkup()
+        oneMonth = types.InlineKeyboardButton("1 Месяц", callback_data='addOneMonthUser')
+        threeMonths = types.InlineKeyboardButton("3 Месяца", callback_data='addThreeMonthsUser')
+        markup.add(oneMonth, threeMonths)
 
-        bot.send_message(data[0], 'Ваша подписка успешно активирована <b>до ' + data[1] + " " + data[2] + ".</b> Чтобы получить ссылку доступа, выберите в меню кнопку 'Подписка'.", parse_mode='html')
-        bot.send_message(message.chat.id, 'Подписка для пользователя с id ' + data[0] + ' успешно оформлена до ' + data[1] + " " + data[2])
+        bot.send_message(message.chat.id, 'Выберите период подписки для пользователя с айди:' + id, reply_markup=markup)
+        # if str(data[1]) == '1':
+        #     sql.execute('UPDATE users SET isSub=?, untill=? WHERE user_id=?', (1, data[1] + " " + data[2], data[0]))
+        #     db.commit()
 
-    elif sql.execute('SELECT * from users WHERE user_id = ? and isSub = ?', (data[0], 1,)).fetchone() != None:
+        #     bot.send_message(data[0], "Ваша подписка успешно активирована <b>до .</b> Чтобы получить ссылку доступа, выберите в меню кнопку 'Подписка'.", parse_mode='html')
+        #     bot.send_message(message.chat.id, 'Подписка для пользователя с id ' + data[0] + ' успешно оформлена до ')
+
+        # elif str(data[1]) == '3':
+        #     pass
+
+    elif sql.execute('SELECT * from users WHERE user_id = ? and isSub = ?', (id, 1,)).fetchone() != None:
         bot.send_message(message.chat.id, 'у этого пользователя уже оформлена подписка')
         
-    elif sql.execute('SELECT * from users WHERE user_id = ? and isSub = ?', (data[0], 0,)).fetchone() == None:
+    elif sql.execute('SELECT * from users WHERE user_id = ? and isSub = ?', (id, 0,)).fetchone() == None:
         bot.send_message(message.chat.id, 'такого пользователя не существует')
 
 def changeUserData(message):
