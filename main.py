@@ -81,7 +81,7 @@ def Buttons(message):
             backMenu = types.InlineKeyboardButton("🔙 Назад", callback_data='backMenu')
             markup.add(subsOne, subsThree, backMenu)
 
-            bot.send_message(message.chat.id, '<b>Выберите длительность доступа в 🔒Секретный Канал</b>', parse_mode='html', reply_markup=markup)
+            bot.send_message(message.chat.id, '<b>Выберите длительность доступа в ForexDohod VIP SIGNALS 🔒</b>', parse_mode='html', reply_markup=markup)
 
         elif message.text == '📊 Подписка':
             if sql.execute('SELECT untill from users WHERE user_id = ?', (message.chat.id,)).fetchone()[0] != '0':
@@ -96,15 +96,15 @@ def Buttons(message):
                     subscribeBtn = types.InlineKeyboardButton("🛒 Перейти к покупке", callback_data='backRate')
                     markup.add(subscribeBtn)
 
-                    bot.send_message(message.chat.id, 'Ваша подписка на <b>Секретный Канал ForexDohod</b> закончилась\nПерейти к покупке?', parse_mode='html' ,reply_markup=markup)
+                    bot.send_message(message.chat.id, 'Ваша подписка на <b>ForexDohod VIP SIGNALS</b> закончилась\nПерейти к покупке?', parse_mode='html' ,reply_markup=markup)
                 
                 elif sql.execute('SELECT * from users WHERE user_id = ? and isSub = ?', (message.chat.id, 1,)).fetchone() != None:
                     untill = sql.execute('SELECT untill from users WHERE user_id = ?', (message.chat.id,)).fetchone()[0]
                     markup = types.InlineKeyboardMarkup()
-                    subscribeBtn = types.InlineKeyboardButton("👉 Секретный Канал ForexDohod", callback_data='privateLink')
+                    subscribeBtn = types.InlineKeyboardButton("👉 ForexDohod VIP SIGNALS", callback_data='privateLink')
                     markup.add(subscribeBtn)
 
-                    bot.send_message(message.chat.id, 'Ваша подписка на <b>Секретный Канал ForexDohod</b> действует до ' + untill + '\n\n<b>Для получения доступа к каналу нажмите на соответствующую кнопку ниже 👇</b>\n\n⚠ Если у вас появляется ошибка ссылка не действительна или чат не существует или вы не можете войти в сообщество, просто попробуйте ещё раз через пару минут (особенность Telegram)', parse_mode='html' ,reply_markup=markup)
+                    bot.send_message(message.chat.id, 'Ваша подписка на <b>ForexDohod VIP SIGNALS</b> действует до ' + untill + '\n\n<b>Для получения доступа к каналу нажмите на соответствующую кнопку ниже 👇</b>\n\n⚠ Если у вас появляется ошибка ссылка не действительна или чат не существует или вы не можете войти в сообщество, просто попробуйте ещё раз через пару минут (особенность Telegram)', parse_mode='html' ,reply_markup=markup)
 
             elif sql.execute('SELECT id from users WHERE user_id = ? and isSub = ?', (message.chat.id, 0,)).fetchone() != None:
                 markup = types.InlineKeyboardMarkup()
@@ -208,7 +208,7 @@ def InlineCallback(call):
                 backRate = types.InlineKeyboardButton("🔙 Назад", callback_data='backRate')
                 markup.add(usdt, card, qiwi, backRate)
 
-                bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=f"<b>1 Месяц\nЦена: {pricePerMonth} USD\nСрок подписки: 30 дней\n\nВы получите приглашение в Секретный Канал ForexDohod на 30 дней, в котором выкладываются абсолютно все сигналы без ограничений.</b>",
+                bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=f"Я рад, что вы решили присоединиться!\nНиже вы можете найти подробную информацию о выбранном вами плане. Выберите пожалуйста способ оплаты.\n\nПлан: <b>VIP SIGNALS</b>\nПродолжительность: <b>1 Месяц</b>\nСтоимость: <b>{pricePerMonth} USD</b>\nАвто-продляемая подписка: <b>Нет</b>\n\nЗавершив этот заказ, вы получите доступ к следующим чатам:\n📢 Канал <b>ForexDohod VIP SIGNALS ®</b>",
                 reply_markup=markup, parse_mode='html')
 
             elif call.data == 'subsThree':
@@ -219,7 +219,7 @@ def InlineCallback(call):
                 back = types.InlineKeyboardButton("🔙 Назад", callback_data='backRate')
                 markup.add(usdt, card, qiwi, back)
 
-                bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=f"<b>3 Месяца\nЦена: {pricePer3Months} USD\nСрок подписки: 90 дней\n\nВы получите приглашение в Секретный Канал ForexDohod на 90 дней, в котором выкладываются абсолютно все сигналы без ограничений.</b>",
+                bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=f"Я рад, что вы решили присоединиться!\nНиже вы можете найти подробную информацию о выбранном вами плане. Выберите пожалуйста способ оплаты.\n\nПлан: <b>VIP SIGNALS</b>\nПродолжительность: <b>3 Месяца</b>\nСтоимость: <b>{pricePer3Months} USD</b>\nАвто-продляемая подписка: <b>Нет</b>\n\nЗавершив этот заказ, вы получите доступ к следующим чатам:\n📢 Канал <b>ForexDohod VIP SIGNALS ®</b>",
                 reply_markup=markup, parse_mode='html')             
                 
             elif call.data == "usdt":
