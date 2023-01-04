@@ -350,4 +350,5 @@ def paymentWay(way, duration, call):
             bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=f'Способ оплаты: QIWI\nСумма к оплате: *{pricePer3Months} USD*\nДля оплаты переведите указанную сумму Подписки на этот номер телефона Qiwi:\n\n`{qiwiNumber}` (нажмите, номер телефона скопируется)\n\n*Обратите внимание на то, что вы должны рассчитать количество рублей*, чтобы сумма совпадала с ценой подписки.', reply_markup=markup ,parse_mode='MARKDOWN')
 
 
+
 bot.polling(none_stop=True)
