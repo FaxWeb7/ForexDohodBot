@@ -34,14 +34,10 @@ def welcome(message):
     revenue = types.KeyboardButton("Сколько можно заработать?")
     freeChannel = types.KeyboardButton("Бесплатный канал")
     feedback = types.KeyboardButton("Обратная связь")
-    changeUserData = types.KeyboardButton("Статистика пользователей")
-    statistic = types.KeyboardButton("Изменить данные пользователя")
-    deleteSub = types.KeyboardButton("Удалить подписчика с секретного канала")
-    writeToSub = types.KeyboardButton("Написать сообщение пользователю")
-    privateSub = types.KeyboardButton("Добавить подписчика в секретный канал")
+    adminCmd = types.KeyboardButton("🟰🟰🟰 АДМИН ПАНЕЛЬ 🟰🟰🟰")
 
     if message.chat.id == creator_id:
-        markup.add(rates, subscribe, education, revenue, freeChannel, feedback, statistic, changeUserData, deleteSub, writeToSub, privateSub)
+        markup.add(rates, subscribe, education, revenue, freeChannel, feedback, adminCmd)
     else:
         markup.add(rates, subscribe, education, revenue, freeChannel, feedback)
 
@@ -114,6 +110,22 @@ def Buttons(message):
                 bot.send_message(message.chat.id, 'У вас нет активных подписок. Перейти к покупке?', reply_markup=markup)
 
         ###  FUNCTIONS ONLY FOR CREATOR  ###
+        elif message.text == '🟰🟰🟰 АДМИН ПАНЕЛЬ 🟰🟰🟰':
+            if message.chat.id == creator_id:
+                markup = types.ReplyKeyboardMarkup(resize_keyboard=True, row_width=2)
+                privateSub = types.KeyboardButton("Добавить подписчика в секретный канал")
+                deleteSub = types.KeyboardButton("Удалить подписчика с секретного канала")
+                changeUserData = types.KeyboardButton("Изменить данные пользователя")
+                statistic = types.KeyboardButton("Статистика пользователей")
+                writeToSub = types.KeyboardButton("Написать сообщение пользователю")
+                mailing = types.KeyboardButton("Рассылка по пользователям")
+                back = types.KeyboardButton("🔙 Назад")
+                markup.add(privateSub, deleteSub, changeUserData, statistic, writeToSub, mailing, back)
+
+                bot.send_message(message.chat.id, 'Вы перешли в админ панель', reply_markup=markup)
+            else:
+                bot.send_message(message.chat.id, 'Эта функция недоступна для вас')
+
         elif message.text == 'Статистика пользователей':
             if message.chat.id == creator_id:
                 users = sql.execute('SELECT * from users').fetchall()
@@ -148,10 +160,34 @@ def Buttons(message):
 
         elif message.text == 'Написать сообщение пользователю':
             if message.chat.id == creator_id:
-                msg = bot.send_message(message.chat.id, 'Введите id и сообщение пользователю через пробел, я ему все передам')
+                msg = bot.send_message(message.chat.id, 'Введите id и текст сообщения через пробел')
                 bot.register_next_step_handler(msg, writeToUser)
             else:
                 bot.send_message(message.chat.id, 'Эта функция недоступна для вас')
+
+        elif message.text == 'Рассылка по пользователям':
+            if message.chat.id == creator_id:
+                msg = bot.send_message(message.chat.id, 'Введите текст рассылки')
+                bot.register_next_step_handler(msg, writeMailing)
+            else:
+                bot.send_message(message.chat.id, 'Эта функция недоступна для вас')
+
+        elif message.text == '🔙 Назад':
+            markup = types.ReplyKeyboardMarkup(resize_keyboard=True, row_width=2)
+            rates = types.KeyboardButton("🛒 Тарифы")
+            subscribe = types.KeyboardButton("📊 Подписка")
+            education = types.KeyboardButton("Бесплатное обучение")
+            revenue = types.KeyboardButton("Сколько можно заработать?")
+            freeChannel = types.KeyboardButton("Бесплатный канал")
+            feedback = types.KeyboardButton("Обратная связь")
+            adminCmd = types.KeyboardButton("🟰🟰🟰 АДМИН ПАНЕЛЬ 🟰🟰🟰")
+
+            if message.chat.id == creator_id:
+                markup.add(rates, subscribe, education, revenue, freeChannel, feedback, adminCmd)
+            else:
+                markup.add(rates, subscribe, education, revenue, freeChannel, feedback)
+
+            bot.send_message(message.chat.id, 'Вы в главном меню', reply_markup=markup)
 
 
 ###  INLINE CALLBACKS  ###
@@ -315,6 +351,11 @@ def writeToUser(message):
     elif sql.execute('SELECT * from users WHERE user_id = ? ', (data[0],)).fetchone() == None:
         bot.send_message(message.chat.id, 'такого пользователя не существует')
 
+def writeMailing(message):
+    users = sql.execute('SELECT user_id from users').fetchall()
+    for userId in users:
+        bot.send_message(userId[0], message.text, parse_mode='html')
+    print('Рассылка прошла успешно!')
 
 ###  OTHER FUNCTIONS  ###
 def parseUsers(users):
