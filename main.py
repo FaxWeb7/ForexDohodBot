@@ -32,8 +32,8 @@ def welcome(message):
     subscribe = types.KeyboardButton("📊 Подписка")
     education = types.KeyboardButton("Бесплатное обучение")
     revenue = types.KeyboardButton("Сколько можно заработать?")
-    freeChannel = types.KeyboardButton("Бесплатный канал")
-    feedback = types.KeyboardButton("Обратная связь")
+    freeChannel = types.KeyboardButton("🗞️ Бесплатный канал")
+    feedback = types.KeyboardButton("☎️ Обратная связь")
     adminCmd = types.KeyboardButton("🟰🟰🟰 АДМИН ПАНЕЛЬ 🟰🟰🟰")
 
     if message.chat.id == creator_id:
@@ -57,12 +57,12 @@ def Buttons(message):
             <b>Сколько можно заработать? 🧐</b>\n\nПеред тем, как узнать ответ на этот вопрос - <b>обязательно пройдите обучение в нашем боте</b>, либо сделайте это после прочтения этого сообщения.\n\nКонечно все зависит от вашего депозита, опыта, терпения и так далее, но <b>в среднем данная цифра варьируется от 15% до 30% в месяц к депозиту.</b>\n\n<b>В среднем можно зарабатывать по 0.5-1% в день к депозиту</b>. Если вы знакомы с понятием <b>сложного процента</b>, то знаете, что с депозитом всего в 1000$ и ежедневным приростом в размере хотябы 0.7% можно в по истечение двух лет иметь на счету порядка 80 000$, что является огромной прибылью.\n\nНо трейдинг так и работает, <b>тут важно зарабатывать постоянно</b>, хоть и небольшие проценты. В противном случае жадность может привести вас к потере денег.\n\n✅ <b><u>На данном этапе я бы вам посоветовал:</u></b>\n\n<b>1.</b> Начать бесплатное обучение в этом боте\n<b>2.</b> Подписаться на <a href="https://t.me/ForexDohod">мой Телеграм канал</a>, чтобы не пропускать бесплатные сигналы, новости и мои мысли\n<b>3.</b> Приобрести доступ в мой закрытый канал и зарабатывать намного больше вместе с нами
             """, parse_mode='html', photo=open('./assets/rate.jpeg', 'rb'))
 
-        elif message.text == 'Бесплатный канал':
+        elif message.text == '🗞️ Бесплатный канал':
             bot.send_message(message.chat.id, """
             <b>Еще не подписаны на мой Телеграм канал "ForexDohod"? 🙈</b>\n\n<b><u>В нём вы сможете найти:</u></b>\n\n▪️Бесплатные сигналы\n▪️Обзор рынка\n▪️Важные новости и другое!\n\n<a href="https://t.me/ForexDohod"><b>✅Ссылка на канал✅</b></a>
             """, parse_mode='html')
 
-        elif message.text == 'Обратная связь':
+        elif message.text == '☎️ Обратная связь':
             bot.send_message(message.chat.id, """
             Если у вас возникли вопросы, то свяжитесь с <a href="t.me/@faxweb_w">админом</a>, он ответит вам в ближайшее время.
             """, parse_mode='html')
@@ -74,7 +74,7 @@ def Buttons(message):
             markup = types.InlineKeyboardMarkup(row_width=1)
             subsOne = types.InlineKeyboardButton("1 Месяц", callback_data='subsOne')
             subsThree = types.InlineKeyboardButton("3 Месяца (-20%)", callback_data='subsThree')
-            backMenu = types.InlineKeyboardButton("🔙 Назад", callback_data='backMenu')
+            backMenu = types.InlineKeyboardButton("◀ Назад", callback_data='backMenu')
             markup.add(subsOne, subsThree, backMenu)
 
             bot.send_message(message.chat.id, '<b>Выберите длительность доступа в ForexDohod VIP SIGNALS 🔒</b>', parse_mode='html', reply_markup=markup)
@@ -119,7 +119,7 @@ def Buttons(message):
                 statistic = types.KeyboardButton("Статистика пользователей")
                 writeToSub = types.KeyboardButton("Написать сообщение пользователю")
                 mailing = types.KeyboardButton("Рассылка по пользователям")
-                back = types.KeyboardButton("🔙 Назад")
+                back = types.KeyboardButton("◀ Назад")
                 markup.add(privateSub, deleteSub, changeUserData, statistic, writeToSub, mailing, back)
 
                 bot.send_message(message.chat.id, 'Вы перешли в админ панель', reply_markup=markup)
@@ -172,14 +172,14 @@ def Buttons(message):
             else:
                 bot.send_message(message.chat.id, 'Эта функция недоступна для вас')
 
-        elif message.text == '🔙 Назад':
+        elif message.text == '◀ Назад':
             markup = types.ReplyKeyboardMarkup(resize_keyboard=True, row_width=2)
             rates = types.KeyboardButton("🛒 Тарифы")
             subscribe = types.KeyboardButton("📊 Подписка")
             education = types.KeyboardButton("Бесплатное обучение")
             revenue = types.KeyboardButton("Сколько можно заработать?")
-            freeChannel = types.KeyboardButton("Бесплатный канал")
-            feedback = types.KeyboardButton("Обратная связь")
+            freeChannel = types.KeyboardButton("🗞️ Бесплатный канал")
+            feedback = types.KeyboardButton("☎️ Обратная связь")
             adminCmd = types.KeyboardButton("🟰🟰🟰 АДМИН ПАНЕЛЬ 🟰🟰🟰")
 
             if message.chat.id == creator_id:
@@ -231,7 +231,7 @@ def InlineCallback(call):
                 markup = types.InlineKeyboardMarkup(row_width=1)
                 subsOne = types.InlineKeyboardButton("1 Месяц", callback_data='subsOne')
                 subsThree = types.InlineKeyboardButton("3 Месяца (-20%)", callback_data='subsThree')
-                backMenu = types.InlineKeyboardButton("🔙 Назад", callback_data='backMenu')
+                backMenu = types.InlineKeyboardButton("◀ Назад", callback_data='backMenu')
                 markup.add(subsOne, subsThree, backMenu)
 
                 bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text='<b>Выберите длительность доступа в 🔒Секретный Канал</b>', parse_mode='html', reply_markup=markup)
@@ -241,7 +241,7 @@ def InlineCallback(call):
                 usdt = types.InlineKeyboardButton("USDT TRC20", callback_data='usdt')
                 card = types.InlineKeyboardButton("По номеру карты", callback_data='card')
                 qiwi = types.InlineKeyboardButton("Qiwi", callback_data='qiwi')
-                backRate = types.InlineKeyboardButton("🔙 Назад", callback_data='backRate')
+                backRate = types.InlineKeyboardButton("◀ Назад", callback_data='backRate')
                 markup.add(usdt, card, qiwi, backRate)
 
                 bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=f"Я рад, что вы решили присоединиться!\nНиже вы можете найти подробную информацию о выбранном вами плане. Выберите пожалуйста способ оплаты.\n\nПлан: <b>VIP SIGNALS</b>\nПродолжительность: <b>1 Месяц</b>\nСтоимость: <b>{pricePerMonth} USD</b>\nАвто-продляемая подписка: <b>Нет</b>\n\nЗавершив этот заказ, вы получите доступ к следующим чатам:\n📢 Канал <b>ForexDohod VIP SIGNALS ®</b>",
@@ -252,7 +252,7 @@ def InlineCallback(call):
                 usdt = types.InlineKeyboardButton("USDT TRC20", callback_data='usdt3')
                 card = types.InlineKeyboardButton("По номеру карты", callback_data='card3')
                 qiwi = types.InlineKeyboardButton("Qiwi", callback_data='qiwi3')
-                back = types.InlineKeyboardButton("🔙 Назад", callback_data='backRate')
+                back = types.InlineKeyboardButton("◀ Назад", callback_data='backRate')
                 markup.add(usdt, card, qiwi, back)
 
                 bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=f"Я рад, что вы решили присоединиться!\nНиже вы можете найти подробную информацию о выбранном вами плане. Выберите пожалуйста способ оплаты.\n\nПлан: <b>VIP SIGNALS</b>\nПродолжительность: <b>3 Месяца</b>\nСтоимость: <b>{pricePer3Months} USD</b>\nАвто-продляемая подписка: <b>Нет</b>\n\nЗавершив этот заказ, вы получите доступ к следующим чатам:\n📢 Канал <b>ForexDohod VIP SIGNALS ®</b>",
