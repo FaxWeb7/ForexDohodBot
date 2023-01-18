@@ -1,11 +1,18 @@
 import telebot
 import config
+import sqlite3
 from telebot import types
 
 bot = telebot.TeleBot(config.TOKEN)
+db = sqlite3.connect('./forexUsers.db', check_same_thread=False)
+sql = db.cursor()
 
 @bot.message_handler(commands=['start'])
 def welcome(message):
+    if sql.execute('SELECT * from users WHERE user_id = ?', (message.chat.id,)).fetchone() == None:
+        sql.execute('INSERT INTO users VALUES (NULL, ?, ?, ?)', (message.chat.id , 0, 0))
+        db.commit()
+
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True, row_width=2)
     education = types.KeyboardButton("Бесплатное обучение")
     revenue = types.KeyboardButton("Сколько можно заработать?")

@@ -6,10 +6,13 @@ import time
 from telebot import types
 from datetime import datetime, timedelta
 
+import helpers.messages as messages
+import helpers.markups as markups
+
 
 ###  MAIN CONSTANTS  ###
 bot = telebot.TeleBot(config.TOKEN)
-db = sqlite3.connect('./privateUsers.db', check_same_thread=False)
+db = sqlite3.connect('./forexUsers.db', check_same_thread=False)
 sql = db.cursor()
 
 creator_id = 1056056149
@@ -27,25 +30,10 @@ def welcome(message):
         sql.execute('INSERT INTO users VALUES (NULL, ?, ?, ?)', (message.chat.id , 0, 0))
         db.commit()
 
-    markup = types.ReplyKeyboardMarkup(resize_keyboard=True, row_width=2)
-    rates = types.KeyboardButton("🛒 Тарифы")
-    subscribe = types.KeyboardButton("📊 Подписка")
-    education = types.KeyboardButton("Бесплатное обучение")
-    revenue = types.KeyboardButton("Сколько можно заработать?")
-    freeChannel = types.KeyboardButton("🗞️ Бесплатный канал")
-    feedback = types.KeyboardButton("☎️ Обратная связь")
-    adminCmd = types.KeyboardButton("🟰🟰🟰 АДМИН ПАНЕЛЬ 🟰🟰🟰")
-
     if message.chat.id == creator_id:
-        markup.add(rates, subscribe, education, revenue, freeChannel, feedback, adminCmd)
+        bot.send_message(message.chat.id, text=messages.startMessage.format(message.from_user, bot.get_me()),parse_mode='html', reply_markup=markups.menuAdminMarkup)
     else:
-        markup.add(rates, subscribe, education, revenue, freeChannel, feedback)
-
-    bot.send_message(message.chat.id, 
-    """
-        👋 <b>Добро пожаловать в ForexDohodBot, {0.first_name}!</b>\n\nМеня зовут Артём! <b>В этом боте вы можете пройти бесплатное 📘обучение</b>, узнать все о моем <b>🤖Роботе</b> , а также приобрести подписку на <b>🔒VIP-канал</b>.\n\nПосле покупки доступа в VIP-канал, вам будут доступны <b>абсолютно все сигналы от моего робота по Золоту, а также в ближайшем будущем и по валютным парам 💹</b>. 
-    """
-    .format(message.from_user, bot.get_me()),parse_mode='html', reply_markup=markup)
+        bot.send_message(message.chat.id, text=messages.startMessage.format(message.from_user, bot.get_me()),parse_mode='html', reply_markup=markups.menuMarkup)
 
 
 ###  BUTTONS HANDLER  ###
@@ -53,31 +41,19 @@ def welcome(message):
 def Buttons(message):
     if message.chat.type == 'private':
         if message.text == 'Сколько можно заработать?':
-            bot.send_photo(message.chat.id, caption="""
-            <b>Сколько можно заработать? 🧐</b>\n\nПеред тем, как узнать ответ на этот вопрос - <b>обязательно пройдите обучение в нашем боте</b>, либо сделайте это после прочтения этого сообщения.\n\nКонечно все зависит от вашего депозита, опыта, терпения и так далее, но <b>в среднем данная цифра варьируется от 15% до 30% в месяц к депозиту.</b>\n\n<b>В среднем можно зарабатывать по 0.5-1% в день к депозиту</b>. Если вы знакомы с понятием <b>сложного процента</b>, то знаете, что с депозитом всего в 1000$ и ежедневным приростом в размере хотябы 0.7% можно в по истечение двух лет иметь на счету порядка 80 000$, что является огромной прибылью.\n\nНо трейдинг так и работает, <b>тут важно зарабатывать постоянно</b>, хоть и небольшие проценты. В противном случае жадность может привести вас к потере денег.\n\n✅ <b><u>На данном этапе я бы вам посоветовал:</u></b>\n\n<b>1.</b> Начать бесплатное обучение в этом боте\n<b>2.</b> Подписаться на <a href="https://t.me/ForexDohod">мой Телеграм канал</a>, чтобы не пропускать бесплатные сигналы, новости и мои мысли\n<b>3.</b> Приобрести доступ в мой закрытый канал и зарабатывать намного больше вместе с нами
-            """, parse_mode='html', photo=open('./assets/rate.jpeg', 'rb'))
+            bot.send_photo(message.chat.id, caption=messages.revenueMsg, parse_mode='html', photo=open('./assets/rate.jpeg', 'rb'))
 
         elif message.text == '🗞️ Бесплатный канал':
-            bot.send_message(message.chat.id, """
-            <b>Еще не подписаны на мой Телеграм канал "ForexDohod"? 🙈</b>\n\n<b><u>В нём вы сможете найти:</u></b>\n\n▪️Бесплатные сигналы\n▪️Обзор рынка\n▪️Важные новости и другое!\n\n<a href="https://t.me/ForexDohod"><b>✅Ссылка на канал✅</b></a>
-            """, parse_mode='html')
+            bot.send_message(message.chat.id, messages.freeChannelMsg, parse_mode='html')
 
         elif message.text == '☎️ Обратная связь':
-            bot.send_message(message.chat.id, """
-            Если у вас возникли вопросы, то свяжитесь с <a href="t.me/@faxweb_w">админом</a>, он ответит вам в ближайшее время.
-            """, parse_mode='html')
+            bot.send_message(message.chat.id, messages.feedbackMsg, parse_mode='html')
 
         elif message.text == 'Бесплатное обучение':
-            bot.send_photo(message.chat.id, photo=open('./assets/education.jpg', 'rb'), caption="""‍Отлично, я рад, что <b>вы выбрали путь обучения, это совершенно бесплатно и поможет сохранить ваши деньги!</b>\n\nПоэтому <b>изучить все короткие обучающие статьи ниже очень важно!</b>\n\nЯ постараюсь ответить на максимальное количество ваших вопросов с помощью статей ниже:\n\n<b>1.</b> Проверенные Форекс-Брокеры: <a href="https://roboforex.com">RoboForex</a>, <a href="https://www.exness.com/">Exness</a>, <a href="https://www.icmarkets.com/intl/ru/">ICMarkets</a>.\n<b>2.</b> <a href="https://telegra.ph/Registraciya-i-Verifikaciya-na-RoboForex-12-18">Как зарегистрироваться и верифицировать аккаунт у Форекс-Брокера?</a>\n<b>3.</b> <a href="https://telegra.ph/Kak-otkryt-i-popolnit-schet-u-brokera-RoboForex-12-18">Как открыть и пополнить счет у брокера RoboForex?</a>\n<b>4.</b> <a href="https://telegra.ph/Kak-skachat-terminal-MetaTrader4-i-zajti-na-torgovyj-schet-vashego-brokera-12-18">Как скачать терминал MetaTrader4 и зайти на счет вашего брокера?</a>\n<b>5.</b> <a href="https://telegra.ph/Osnovy-tehnicheskogo-analiza-12-18">Основы технического анализа</a>.\n<b>6.</b> <a href="https://telegra.ph/Manimenedzhment-i-usrednenie-pozicii-12-18">Манименеджмент и усреднение позиции</a>.\n<b>7.</b> <a href="https://telegra.ph/Vsyo-o-moem-robote-Kak-on-rabotaet-torguet-i-daet-signaly-12-18">Как мой робот дает сигналы, и как их повторить без потерь.</a>\n<b>8.</b> <a href="https://telegra.ph/Poleznye-servisy-12-18">Полезные сервисы</a>.\n\nНапоминаю, что <b>изучение этих моментов очень важно для того, чтобы вы сохранили свои деньги и начали их преумножать!</b>""", parse_mode='html')
+            bot.send_photo(message.chat.id, photo=open('./assets/education.jpg', 'rb'), caption=messages.educationMsg, parse_mode='html')
 
         elif message.text == '🛒 Тарифы':
-            markup = types.InlineKeyboardMarkup(row_width=1)
-            subsOne = types.InlineKeyboardButton("1 Месяц", callback_data='subsOne')
-            subsThree = types.InlineKeyboardButton("3 Месяца (-20%)", callback_data='subsThree')
-            backMenu = types.InlineKeyboardButton("◀ Назад", callback_data='backMenu')
-            markup.add(subsOne, subsThree, backMenu)
-
-            bot.send_message(message.chat.id, '<b>Выберите длительность доступа в ForexDohod VIP SIGNALS 🔒</b>', parse_mode='html', reply_markup=markup)
+            bot.send_message(message.chat.id, '<b>Выберите длительность доступа в ForexDohod VIP SIGNALS 🔒</b>', parse_mode='html', reply_markup=markups.tariffsMarkup)
 
         elif message.text == '📊 Подписка':
             if sql.execute('SELECT untill from users WHERE user_id = ?', (message.chat.id,)).fetchone()[0] != '0':
@@ -112,17 +88,7 @@ def Buttons(message):
         ###  FUNCTIONS ONLY FOR CREATOR  ###
         elif message.text == '🟰🟰🟰 АДМИН ПАНЕЛЬ 🟰🟰🟰':
             if message.chat.id == creator_id:
-                markup = types.ReplyKeyboardMarkup(resize_keyboard=True, row_width=2)
-                privateSub = types.KeyboardButton("Добавить подписчика в секретный канал")
-                deleteSub = types.KeyboardButton("Удалить подписчика с секретного канала")
-                changeUserData = types.KeyboardButton("Изменить данные пользователя")
-                statistic = types.KeyboardButton("Статистика пользователей")
-                writeToSub = types.KeyboardButton("Написать сообщение пользователю")
-                mailing = types.KeyboardButton("Рассылка по пользователям")
-                back = types.KeyboardButton("◀ Назад")
-                markup.add(privateSub, deleteSub, changeUserData, statistic, writeToSub, mailing, back)
-
-                bot.send_message(message.chat.id, 'Вы перешли в админ панель', reply_markup=markup)
+                bot.send_message(message.chat.id, 'Вы перешли в админ панель', reply_markup=markups.adminMarkup)
             else:
                 bot.send_message(message.chat.id, 'Эта функция недоступна для вас')
 
@@ -133,7 +99,7 @@ def Buttons(message):
                 usersId = sql.execute('SELECT user_id from users WHERE isSub=?', (0,)).fetchall()
                 privateUsersId = sql.execute('SELECT * from users WHERE isSub=?', (1,)).fetchall()
 
-                bot.send_message(message.chat.id, f'<b>Статистика пользователей ForexDohodBot</b>\n\nКоличество пользователей: {str(len(users))}\nКоличество пользоватей с подпиской: {str(len(privateUsers))}\nПроцент пользователей с подпиской: {round((len(privateUsers)/len(users))*100, 2)}%\n\nИнформация о пользователях без подписки:\n{parseUsers(usersId)}\n\nИнформация о пользователях с подпиской (id, user_id, isSub, untill):\n{parseUsers(privateUsersId)}\n\nИнформация о всех пользователях (id, user_id, isSub, untill):\n{parseUsers(users)}', parse_mode='html')
+                bot.send_message(message.chat.id, messages.statisticMsg(users, privateUsers, parseUsers, usersId, privateUsersId), parse_mode='html')
             else:
                 bot.send_message(message.chat.id, 'Эта функция недоступна для вас')
 
@@ -173,21 +139,10 @@ def Buttons(message):
                 bot.send_message(message.chat.id, 'Эта функция недоступна для вас')
 
         elif message.text == '◀ Назад':
-            markup = types.ReplyKeyboardMarkup(resize_keyboard=True, row_width=2)
-            rates = types.KeyboardButton("🛒 Тарифы")
-            subscribe = types.KeyboardButton("📊 Подписка")
-            education = types.KeyboardButton("Бесплатное обучение")
-            revenue = types.KeyboardButton("Сколько можно заработать?")
-            freeChannel = types.KeyboardButton("🗞️ Бесплатный канал")
-            feedback = types.KeyboardButton("☎️ Обратная связь")
-            adminCmd = types.KeyboardButton("🟰🟰🟰 АДМИН ПАНЕЛЬ 🟰🟰🟰")
-
             if message.chat.id == creator_id:
-                markup.add(rates, subscribe, education, revenue, freeChannel, feedback, adminCmd)
+                bot.send_message(message.chat.id, 'Вы в главном меню', reply_markup=markups.menuAdminMarkup)
             else:
-                markup.add(rates, subscribe, education, revenue, freeChannel, feedback)
-
-            bot.send_message(message.chat.id, 'Вы в главном меню', reply_markup=markup)
+                bot.send_message(message.chat.id, 'Вы в главном меню', reply_markup=markups.menuMarkup)
 
 
 ###  INLINE CALLBACKS  ###
@@ -228,53 +183,19 @@ def InlineCallback(call):
                 bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text='Вы в главном меню', reply_markup=None) 
 
             elif call.data == "backRate":
-                markup = types.InlineKeyboardMarkup(row_width=1)
-                subsOne = types.InlineKeyboardButton("1 Месяц", callback_data='subsOne')
-                subsThree = types.InlineKeyboardButton("3 Месяца (-20%)", callback_data='subsThree')
-                backMenu = types.InlineKeyboardButton("◀ Назад", callback_data='backMenu')
-                markup.add(subsOne, subsThree, backMenu)
-
-                bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text='<b>Выберите длительность доступа в 🔒Секретный Канал</b>', parse_mode='html', reply_markup=markup)
+                bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text='<b>Выберите длительность доступа в 🔒Секретный Канал</b>', parse_mode='html', reply_markup=markups.tariffsMarkup)
 
             elif call.data == 'subsOne':
-                markup = types.InlineKeyboardMarkup(row_width=1)
-                usdt = types.InlineKeyboardButton("USDT TRC20", callback_data='usdt')
-                card = types.InlineKeyboardButton("По номеру карты", callback_data='card')
-                qiwi = types.InlineKeyboardButton("Qiwi", callback_data='qiwi')
-                backRate = types.InlineKeyboardButton("◀ Назад", callback_data='backRate')
-                markup.add(usdt, card, qiwi, backRate)
-
-                bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=f"Я рад, что вы решили присоединиться!\nНиже вы можете найти подробную информацию о выбранном вами плане. Выберите пожалуйста способ оплаты.\n\nПлан: <b>VIP SIGNALS</b>\nПродолжительность: <b>1 Месяц</b>\nСтоимость: <b>{pricePerMonth} USD</b>\nАвто-продляемая подписка: <b>Нет</b>\n\nЗавершив этот заказ, вы получите доступ к следующим чатам:\n📢 Канал <b>ForexDohod VIP SIGNALS ®</b>",
-                reply_markup=markup, parse_mode='html')
+                bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=messages.paymentMsg(pricePerMonth),reply_markup=markups.paymentMarkup, parse_mode='html')
 
             elif call.data == 'subsThree':
-                markup = types.InlineKeyboardMarkup(row_width=1)
-                usdt = types.InlineKeyboardButton("USDT TRC20", callback_data='usdt3')
-                card = types.InlineKeyboardButton("По номеру карты", callback_data='card3')
-                qiwi = types.InlineKeyboardButton("Qiwi", callback_data='qiwi3')
-                back = types.InlineKeyboardButton("◀ Назад", callback_data='backRate')
-                markup.add(usdt, card, qiwi, back)
-
-                bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=f"Я рад, что вы решили присоединиться!\nНиже вы можете найти подробную информацию о выбранном вами плане. Выберите пожалуйста способ оплаты.\n\nПлан: <b>VIP SIGNALS</b>\nПродолжительность: <b>3 Месяца</b>\nСтоимость: <b>{pricePer3Months} USD</b>\nАвто-продляемая подписка: <b>Нет</b>\n\nЗавершив этот заказ, вы получите доступ к следующим чатам:\n📢 Канал <b>ForexDohod VIP SIGNALS ®</b>",
-                reply_markup=markup, parse_mode='html')             
+                bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=messages.paymentMsg(pricePer3Months),reply_markup=markups.paymentMarkup3, parse_mode='html')             
                 
-            elif call.data == "usdt":
-                paymentWay('usdt', 1, call)
+            elif call.data == "usdt" or call.data == 'card' or call.data == 'qiwi':
+                messages.paymentWayMsg(bot, pricePerMonth, walletAddress, qiwiNumber, cardNumber, 1, call)
 
-            elif call.data == "card":
-                paymentWay('card', 1, call)
-
-            elif call.data == "qiwi":
-                paymentWay('qiwi', 1, call)
-
-            elif call.data == "usdt3":
-                paymentWay('usdt', 3, call)
-
-            elif call.data == "card3":
-                paymentWay('card', 3, call)
-
-            elif call.data == "qiwi3":
-                paymentWay('qiwi', 3, call)
+            elif call.data == "usdt3" or call.data == 'card3' or call.data == 'qiwi3':
+                messages.paymentWayMsg(bot, pricePer3Months, walletAddress, qiwiNumber, cardNumber, 3, call)
 
             elif call.data == "payment":
                 msg = bot.send_message(chat_id=call.message.chat.id, text='<b>💰 Оплатили?</b>\n\nОтправьте боту квитанцию об оплате: <b>скриншот или фото.</b>\nНа квитанции должны быть четко видны: <b>дата, время и сумма платежа.</b>', parse_mode='html')
@@ -363,33 +284,6 @@ def parseUsers(users):
     for el in users:
         newArr.append(str(el).replace("'","").replace("(","").replace(")","").replace(",",""))
     return "\n".join(newArr)
-
-def paymentWay(way, duration, call):
-    markup = types.InlineKeyboardMarkup(row_width=1)
-    payment = types.InlineKeyboardButton("✅ Я оплатил", callback_data='payment')
-    backPrice = types.InlineKeyboardButton("❌ Отменить", callback_data='subsThree')
-    markup.add(payment, backPrice)
-    if way == 'usdt':
-        if duration == 1:
-            bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=f'Способ оплаты: USDT TRC20\nСумма к оплате: *{pricePerMonth} USDT*\nДля оплаты переведите указанную сумму Подписки на этот адрес кошелька:\n\n`{walletAddress}` (нажмите,адрес кошелька скопируется)\n\nЭто можно сделать, например, в популярной бирже Бинанс. Напротив валюты USDT нажмите кнопку "Вывод" и введите адрес, который указан выше.\n\nОбратите внимание на *сеть* криптовалюты: *TRC20*.', reply_markup=markup ,parse_mode='MARKDOWN')
-        
-        elif duration == 3:
-            bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=f'Способ оплаты: USDT TRC20\nСумма к оплате: *{pricePer3Months} USDT*\nДля оплаты переведите указанную сумму Подписки на этот адрес кошелька:\n\n`{walletAddress}` (нажмите,адрес кошелька скопируется)\n\nЭто можно сделать, например, в популярной бирже Бинанс. Напротив валюты USDT нажмите кнопку "Вывод" и введите адрес, который указан выше.\n\nОбратите внимание на *сеть* криптовалюты: *TRC20*.', reply_markup=markup ,parse_mode='MARKDOWN')
-
-    elif way == 'card':
-        if duration == 1:
-            bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=f'Способ оплаты: Оплата картой\nСумма к оплате: *{pricePerMonth} USD*\nДля оплаты переведите указанную сумму Подписки на этот номер карты:\n\n`{cardNumber}` (нажмите, номер карты скопируется)\n\n*Обратите внимание на то, что вы должны рассчитать количество рублей*, чтобы сумма совпадала с ценой подписки.', reply_markup=markup ,parse_mode='MARKDOWN')
-        
-        elif duration == 3:
-            bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=f'Способ оплаты: Оплата картой\nСумма к оплате: *{pricePer3Months} USD*\nДля оплаты переведите указанную сумму Подписки на этот номер карты:\n\n`{cardNumber}` (нажмите, номер карты скопируется)\n\n*Обратите внимание на то, что вы должны рассчитать количество рублей*, чтобы сумма совпадала с ценой подписки.', reply_markup=markup ,parse_mode='MARKDOWN')
-
-    elif way == 'qiwi':
-        if duration == 1:
-            bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=f'Способ оплаты: QIWI\nСумма к оплате: *{pricePerMonth} USD*\nДля оплаты переведите указанную сумму Подписки на этот номер телефона Qiwi:\n\n`{qiwiNumber}` (нажмите, номер телефона скопируется)\n\n*Обратите внимание на то, что вы должны рассчитать количество рублей*, чтобы сумма совпадала с ценой подписки.', reply_markup=markup ,parse_mode='MARKDOWN')
-        
-        elif duration == 3:
-            bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=f'Способ оплаты: QIWI\nСумма к оплате: *{pricePer3Months} USD*\nДля оплаты переведите указанную сумму Подписки на этот номер телефона Qiwi:\n\n`{qiwiNumber}` (нажмите, номер телефона скопируется)\n\n*Обратите внимание на то, что вы должны рассчитать количество рублей*, чтобы сумма совпадала с ценой подписки.', reply_markup=markup ,parse_mode='MARKDOWN')
-
 
 
 bot.polling(none_stop=True)
