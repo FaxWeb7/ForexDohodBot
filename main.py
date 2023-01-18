@@ -165,7 +165,7 @@ def InlineCallback(call):
                 sql.execute('UPDATE users SET isSub=?, untill=? WHERE user_id=?', (1, untill, id))
                 db.commit()
 
-                bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text='Подписчику с айди ' + id + ' оформлен доступ к секретному каналу до ' + str(sql.execute('SELECT untill from users WHERE user_id=?', (id,)).fetchone()[0]))
+                bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text='Подписчику с айди ' + id + ' оформлен доступ в VIP-канал до ' + str(sql.execute('SELECT untill from users WHERE user_id=?', (id,)).fetchone()[0]))
                 bot.send_message(id, f"Ваша подписка успешно активирована <b>до {str(sql.execute('SELECT untill from users WHERE user_id=?', (id,)).fetchone()[0])}.</b> Чтобы получить ссылку доступа, выберите в меню кнопку 'Подписка'.", parse_mode='html')
 
             elif call.data == 'addThreeMonthsUser':
