@@ -5,19 +5,23 @@ import sqlite3
 import time
 from telebot import types
 from datetime import datetime, timedelta
+from pyqiwip2p import QiwiP2P
+from random import randint
 
 import helpers.messages as messages
 import helpers.markups as markups
 
 
 ###  MAIN CONSTANTS  ###
-bot = telebot.TeleBot(config.TOKEN)
+bot = telebot.TeleBot(config.BOT_TOKEN)
 db = sqlite3.connect('./forexUsers.db', check_same_thread=False)
 sql = db.cursor()
+p2p = QiwiP2P(auth_key=config.QIWI_TOKEN)
 
 creator_id = 1056056149
-pricePerMonth = '70'
-pricePer3Months =  '170'
+pricePerMonth = 70
+pricePer3Months =  170
+usdrub = 70
 walletAddress = 'TRoha2nsRGVDeDQomuFhtCXBo1uRBqs2W5'
 cardNumber = '2200700408479524'
 qiwiNumber = '+79260534553'
@@ -159,25 +163,10 @@ def InlineCallback(call):
                 bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text='✅ Вход открыт, ссылка действительна 10 секунд', reply_markup=markup)
 
             elif call.data == 'addOneMonthUser':
-                untill = str(datetime.now() + timedelta(days=30)).split('.')[0]
-                id = call.message.text.split(':')[1]
-
-                sql.execute('UPDATE users SET isSub=?, untill=? WHERE user_id=?', (1, untill, id))
-                db.commit()
-
-                bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text='Подписчику с айди ' + id + ' оформлен доступ в VIP-канал до ' + str(sql.execute('SELECT untill from users WHERE user_id=?', (id,)).fetchone()[0]))
-                bot.send_message(id, f"Ваша подписка успешно активирована <b>до {str(sql.execute('SELECT untill from users WHERE user_id=?', (id,)).fetchone()[0])}.</b> Чтобы получить ссылку доступа, выберите в меню кнопку 'Подписка'.", parse_mode='html')
+                addUser(call, 30)
 
             elif call.data == 'addThreeMonthsUser':
-                untill = str(datetime.now() + timedelta(days=90)).split('.')[0]
-                id = call.message.text.split(':')[1]
-
-                sql.execute('UPDATE users SET isSub=?, untill=? WHERE user_id=?', (1, untill, id))
-                db.commit()
-
-                bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text='Подписчику с айди ' + id + ' оформлен доступ к секретному каналу до ' + str(sql.execute('SELECT untill from users WHERE user_id=?', (id,)).fetchone()[0]))
-                bot.send_message(id, f"Ваша подписка успешно активирована <b>до {str(sql.execute('SELECT untill from users WHERE user_id=?', (id,)).fetchone()[0])}.</b> Чтобы получить ссылку доступа, выберите в меню кнопку 'Подписка'.", parse_mode='html')
-
+                addUser(call, 90)
 
             elif call.data == "backMenu":
                 bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text='Вы в главном меню', reply_markup=None) 
@@ -186,20 +175,39 @@ def InlineCallback(call):
                 bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text='<b>Выберите длительность доступа в 🔒Секретный Канал</b>', parse_mode='html', reply_markup=markups.tariffsMarkup)
 
             elif call.data == 'subsOne':
-                bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=messages.paymentMsg(pricePerMonth),reply_markup=markups.paymentMarkup, parse_mode='html')
+                bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=messages.paymentMsg(pricePerMonth, 1),reply_markup=markups.paymentMarkup, parse_mode='html')
 
             elif call.data == 'subsThree':
-                bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=messages.paymentMsg(pricePer3Months),reply_markup=markups.paymentMarkup3, parse_mode='html')             
+                bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=messages.paymentMsg(pricePer3Months, 3),reply_markup=markups.paymentMarkup3, parse_mode='html')             
                 
-            elif call.data == "usdt" or call.data == 'card' or call.data == 'qiwi':
-                messages.paymentWayMsg(bot, pricePerMonth, walletAddress, qiwiNumber, cardNumber, 1, call)
+            elif call.data == "usdt" or call.data == 'card':
+                messages.paymentWayMsg(bot, pricePerMonth, walletAddress, qiwiNumber, cardNumber, 1, call, None)
 
-            elif call.data == "usdt3" or call.data == 'card3' or call.data == 'qiwi3':
-                messages.paymentWayMsg(bot, pricePer3Months, walletAddress, qiwiNumber, cardNumber, 3, call)
+            elif call.data == "usdt3" or call.data == 'card3':
+                messages.paymentWayMsg(bot, pricePer3Months, walletAddress, qiwiNumber, cardNumber, 3, call, None)
 
-            elif call.data == "payment":
-                msg = bot.send_message(chat_id=call.message.chat.id, text='<b>💰 Оплатили?</b>\n\nОтправьте боту квитанцию об оплате: <b>скриншот или фото.</b>\nНа квитанции должны быть четко видны: <b>дата, время и сумма платежа.</b>', parse_mode='html')
-                bot.register_next_step_handler(msg, checkPayment)
+            elif call.data == 'qiwi':
+                comment = str(call.message.chat.id) + '_' + str(randint(1000, 9999))
+                bill = p2p.bill(amount=int(pricePerMonth)*int(usdrub), lifetime=15, comment=comment)
+                messages.paymentWayMsg(bot, pricePerMonth, walletAddress, qiwiNumber, cardNumber, 1, call, bill)
+
+            elif call.data == 'qiwi3':
+                comment = str(call.message.chat.id) + '_' + str(randint(1000, 9999))
+                bill = p2p.bill(amount=int(pricePer3Months)*int(usdrub), lifetime=15, comment=comment)
+                messages.paymentWayMsg(bot, pricePer3Months, walletAddress, qiwiNumber, cardNumber, 3, call, bill)
+
+            elif 'PyQiwiP2P' in call.data:
+                data = call.data.split('_')
+                if data[1] == '1':
+                    if p2p.check(data[0]).status == 'PAID':
+                        addUser(call, 30)
+                    elif p2p.check(data[0]).status != 'PAID':
+                        bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text='<b>Счет не оплачен, попробуйте повторить попытку.</b>',reply_markup=None, parse_mode='html')  
+                elif data[1] == '3':
+                    if p2p.check(data[0]).status == 'PAID':
+                        addUser(call, 90)
+                    elif p2p.check(data[0]).status != 'PAID':
+                        bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text='<b>Счет не оплачен, попробуйте повторить попытку.</b>',reply_markup=None, parse_mode='html')  
 
     except Exception as e:
         print(repr(e))
@@ -278,12 +286,20 @@ def writeMailing(message):
         bot.send_message(userId[0], message.text, parse_mode='html')
     print('Рассылка прошла успешно!')
 
-###  OTHER FUNCTIONS  ###
+###  HELPER FUNCTIONS  ###
 def parseUsers(users):
     newArr = []
     for el in users:
         newArr.append(str(el).replace("'","").replace("(","").replace(")","").replace(",",""))
     return "\n".join(newArr)
 
+def addUser(call, duration):
+    untill = str(datetime.now() + timedelta(days=duration)).split('.')[0]
+
+    sql.execute('UPDATE users SET isSub=?, untill=? WHERE user_id=?', (1, untill, call.message.chat.id))
+    db.commit()
+
+    bot.send_message(chat_id=creator_id, text='Подписчику с айди ' + str(call.message.chat.id) + ' оформлен доступ в VIP-канал до ' + str(sql.execute('SELECT untill from users WHERE user_id=?', (call.message.chat.id,)).fetchone()[0]))
+    bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=f"Ваша подписка успешно активирована <b>до {str(sql.execute('SELECT untill from users WHERE user_id=?', (call.message.chat.id,)).fetchone()[0])}.</b> Чтобы получить ссылку доступа, выберите в меню кнопку 'Подписка'.", parse_mode='html')
 
 bot.polling(none_stop=True)
