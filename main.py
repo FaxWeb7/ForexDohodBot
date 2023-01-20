@@ -308,4 +308,4 @@ def addUser(id, duration):
     bot.send_message(chat_id=id, text=f"Ваша подписка успешно активирована <b>до {str(sql.execute('SELECT untill from users WHERE user_id=?', (id,)).fetchone()[0])}.</b> Чтобы получить ссылку доступа, выберите в меню кнопку 'Подписка'.", parse_mode='html')
 
 if __name__ == '__main__':
-    bot.polling(none_stop=True)
+    bot.polling(none_stop=True) 
