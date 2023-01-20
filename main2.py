@@ -3,7 +3,7 @@ import config
 import sqlite3
 from telebot import types
 
-bot = telebot.TeleBot(config.TOKEN)
+bot = telebot.TeleBot(config.BOT_TOKEN)
 db = sqlite3.connect('./forexUsers.db', check_same_thread=False)
 sql = db.cursor()
 
