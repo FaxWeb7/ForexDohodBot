@@ -46,6 +46,9 @@ payment3 = types.InlineKeyboardButton("✅ Я оплатил", callback_data='pa
 backPrice3 = types.InlineKeyboardButton("❌ Отменить", callback_data='subsThree')
 paymentDesc3 = types.InlineKeyboardMarkup(row_width=1).add(payment3, backPrice3)
 
+order = types.InlineKeyboardButton('📞 Заказать рекламу', url='t.me/@faxweb_w' , callback_data='mailingMsg')
+advertisingMarkup = types.InlineKeyboardMarkup(row_width=1).add(order)
+
 ### FUNCTIONAL MERKUPS ###
 def paymentQiwiDesc (billUrl, billId): 
     payment = types.InlineKeyboardButton("Ссылка на оплату", url=billUrl, callback_data='paymentQiwi')

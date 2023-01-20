@@ -6,6 +6,7 @@ from telebot import types
 bot = telebot.TeleBot(config.BOT_TOKEN)
 db = sqlite3.connect('./forexUsers.db', check_same_thread=False)
 sql = db.cursor()
+creator_id = 1056056149
 
 @bot.message_handler(commands=['start'])
 def welcome(message):
@@ -13,19 +14,18 @@ def welcome(message):
         sql.execute('INSERT INTO users VALUES (NULL, ?, ?, ?)', (message.chat.id , 0, 0))
         db.commit()
 
-    markup = types.ReplyKeyboardMarkup(resize_keyboard=True, row_width=2)
     education = types.KeyboardButton("Бесплатное обучение")
     revenue = types.KeyboardButton("Сколько можно заработать?")
     freeChannel = types.KeyboardButton("🗞️ Бесплатный канал")
     feedback = types.KeyboardButton("☎️ Обратная связь")
+    statistic = types.KeyboardButton("Статистика пользователей")
+    markup = types.ReplyKeyboardMarkup(resize_keyboard=True, row_width=2).add(education, revenue, freeChannel, feedback)
+    adminMarkup = types.ReplyKeyboardMarkup(resize_keyboard=True, row_width=2).add(education, revenue, freeChannel, feedback, statistic)
+    if message.chat.id == creator_id:
+        bot.send_message(message.chat.id, """👋 <b>Добро пожаловать в ForexDohodBot, {0.first_name}!</b>\n\nМеня зовут Артём! <b>В этом боте вы можете пройти бесплатное 📘обучение</b>, а также узнать все о моем <b>🤖Роботе</b>  """.format(message.from_user, bot.get_me()),parse_mode='html', reply_markup=adminMarkup)
+    else:
+        bot.send_message(message.chat.id, """👋 <b>Добро пожаловать в ForexDohodBot, {0.first_name}!</b>\n\nМеня зовут Артём! <b>В этом боте вы можете пройти бесплатное 📘обучение</b>, а также узнать все о моем <b>🤖Роботе</b>  """.format(message.from_user, bot.get_me()),parse_mode='html', reply_markup=markup)
 
-    markup.add(education, revenue, freeChannel, feedback)
-
-    bot.send_message(message.chat.id, 
-    """
-        👋 <b>Добро пожаловать в ForexDohodBot, {0.first_name}!</b>\n\nМеня зовут Артём! <b>В этом боте вы можете пройти бесплатное 📘обучение</b>, а также узнать все о моем <b>🤖Роботе</b>  
-    """
-    .format(message.from_user, bot.get_me()),parse_mode='html', reply_markup=markup)
 
 @bot.message_handler(content_types=['text'])
 def Buttons(message):
@@ -44,6 +44,28 @@ def Buttons(message):
             """, parse_mode='html')
         elif message.text == 'Бесплатное обучение':
             bot.send_photo(message.chat.id, photo=open('./assets/education.jpg', 'rb'), caption="""‍Отлично, я рад, что <b>вы выбрали путь обучения, это совершенно бесплатно и поможет сохранить ваши деньги!</b>\n\nПоэтому <b>изучить все короткие обучающие статьи ниже очень важно!</b>\n\nЯ постараюсь ответить на максимальное количество ваших вопросов с помощью статей ниже:\n\n<b>1.</b> Проверенные Форекс-Брокеры: <a href="https://roboforex.com">RoboForex</a>, <a href="https://www.exness.com/">Exness</a>, <a href="https://www.icmarkets.com/intl/ru/">ICMarkets</a>.\n<b>2.</b> <a href="https://telegra.ph/Registraciya-i-Verifikaciya-na-RoboForex-12-18">Как зарегистрироваться и верифицировать аккаунт у Форекс-Брокера?</a>\n<b>3.</b> <a href="https://telegra.ph/Kak-otkryt-i-popolnit-schet-u-brokera-RoboForex-12-18">Как открыть и пополнить счет у брокера RoboForex?</a>\n<b>4.</b> <a href="https://telegra.ph/Kak-skachat-terminal-MetaTrader4-i-zajti-na-torgovyj-schet-vashego-brokera-12-18">Как скачать терминал MetaTrader4 и зайти на счет вашего брокера?</a>\n<b>5.</b> <a href="https://telegra.ph/Osnovy-tehnicheskogo-analiza-12-18">Основы технического анализа</a>.\n<b>6.</b> <a href="https://telegra.ph/Manimenedzhment-i-usrednenie-pozicii-12-18">Манименеджмент и усреднение позиции</a>.\n<b>7.</b> <a href="https://telegra.ph/Vsyo-o-moem-robote-Kak-on-rabotaet-torguet-i-daet-signaly-12-18">Как мой робот дает сигналы, и как их повторить без потерь.</a>\n<b>8.</b> <a href="https://telegra.ph/Poleznye-servisy-12-18">Полезные сервисы</a>.\n\nНапоминаю, что <b>изучение этих моментов очень важно для того, чтобы вы сохранили свои деньги и начали их преумножать!</b>""", parse_mode='html')
+        elif message.text == 'Статистика пользователей':
+            if message.chat.id == creator_id:
+                users = sql.execute('SELECT * from users').fetchall()
+                privateUsers = sql.execute("SELECT * from users WHERE isSub=?", (1,)).fetchall()
+                usersId = sql.execute('SELECT user_id from users WHERE isSub=?', (0,)).fetchall()
+                privateUsersId = sql.execute('SELECT * from users WHERE isSub=?', (1,)).fetchall()
+
+                bot.send_message(message.chat.id, statisticMsg(users, privateUsers, parseUsers, usersId, privateUsersId), parse_mode='html')
+            else:
+                bot.send_message(message.chat.id, 'Эта функция недоступна для вас')
+
+### HELPERS ###
+def parseUsers(users):
+    newArr = []
+    for el in users:
+        newArr.append(str(el).replace("'","").replace("(","").replace(")","").replace(",",""))
+    return "\n".join(newArr)
 
 
-bot.polling(none_stop=True)
+def statisticMsg(users, privateUsers, parseUsers, usersId, privateUsersId):
+    return f'<b>Статистика пользователей ForexDohodBot</b>\n\nКоличество пользователей: {str(len(users))}\nКоличество пользоватей с подпиской: {str(len(privateUsers))}\nПроцент пользователей с подпиской: {round((len(privateUsers)/len(users))*100, 2)}%\n\nИнформация о пользователях без подписки:\n{parseUsers(usersId)}\n\nИнформация о пользователях с подпиской (id, user_id, isSub, untill):\n{parseUsers(privateUsersId)}\n\nИнформация о всех пользователях (id, user_id, isSub, untill):\n{parseUsers(users)}'
+
+
+if __name__ == '__main__':
+    bot.polling(none_stop=True)

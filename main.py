@@ -19,9 +19,9 @@ sql = db.cursor()
 p2p = QiwiP2P(auth_key=config.QIWI_TOKEN)
 
 creator_id = 1056056149
-pricePerMonth = 70
+pricePerMonth = 10
 pricePer3Months =  170
-usdrub = 70
+usdrub = 1
 walletAddress = 'TRoha2nsRGVDeDQomuFhtCXBo1uRBqs2W5'
 cardNumber = '2200700408479524'
 qiwiNumber = '+79260534553'
@@ -130,7 +130,7 @@ def Buttons(message):
 
         elif message.text == 'Написать сообщение пользователю':
             if message.chat.id == creator_id:
-                msg = bot.send_message(message.chat.id, 'Введите id и текст сообщения через пробел')
+                msg = bot.send_message(message.chat.id, 'Введите id и текст сообщения через "==="')
                 bot.register_next_step_handler(msg, writeToUser)
             else:
                 bot.send_message(message.chat.id, 'Эта функция недоступна для вас')
@@ -163,10 +163,10 @@ def InlineCallback(call):
                 bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text='✅ Вход открыт, ссылка действительна 10 секунд', reply_markup=markup)
 
             elif call.data == 'addOneMonthUser':
-                addUser(call, 30)
+                addUser(call.message.text.split(':')[1], 30)
 
             elif call.data == 'addThreeMonthsUser':
-                addUser(call, 90)
+                addUser(call.message.text, 90)
 
             elif call.data == "backMenu":
                 bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text='Вы в главном меню', reply_markup=None) 
@@ -200,12 +200,12 @@ def InlineCallback(call):
                 data = call.data.split('_')
                 if data[1] == '1':
                     if p2p.check(data[0]).status == 'PAID':
-                        addUser(call, 30)
+                        addUser(call.message.chat.id, 30)
                     elif p2p.check(data[0]).status != 'PAID':
                         bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text='<b>Счет не оплачен, попробуйте повторить попытку.</b>',reply_markup=None, parse_mode='html')  
                 elif data[1] == '3':
                     if p2p.check(data[0]).status == 'PAID':
-                        addUser(call, 90)
+                        addUser(call.message.chat.id, 90)
                     elif p2p.check(data[0]).status != 'PAID':
                         bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text='<b>Счет не оплачен, попробуйте повторить попытку.</b>',reply_markup=None, parse_mode='html')  
 
@@ -272,7 +272,7 @@ def deleteUser(message):
         bot.send_message(message.chat.id, 'такого пользователя не существует')
 
 def writeToUser(message):
-    data = message.text.split(' ')
+    data = message.text.split('===')
     if sql.execute('SELECT id from users WHERE user_id = ?', (data[0],)).fetchone() != None:
         bot.send_message(data[0], f'<b>Сообщение от администратора:</b>\n\n{data[1]}', parse_mode='html')
         bot.send_message(message.chat.id, 'Ваше сообщение успешно отправлено пользователю')
@@ -282,9 +282,14 @@ def writeToUser(message):
 
 def writeMailing(message):
     users = sql.execute('SELECT user_id from users').fetchall()
-    for userId in users:
-        bot.send_message(userId[0], message.text, parse_mode='html')
-    print('Рассылка прошла успешно!')
+    if message.photo:
+        for userId in users:
+            bot.send_photo(userId[0], photo=message.photo[0].file_id, caption=message.caption, parse_mode='MARKDOWN', reply_markup=markups.advertisingMarkup)
+        bot.send_message(creator_id, 'Рассылка прошла успешно!', parse_mode='html')
+    else:
+        for userId in users:
+            bot.send_message(userId[0], message.text, parse_mode='MARKDOWN', reply_markup=markups.advertisingMarkup)
+        bot.send_message(chat_id=creator_id, text='Рассылка прошла успешно!', parse_mode='html')
 
 ###  HELPER FUNCTIONS  ###
 def parseUsers(users):
@@ -293,13 +298,14 @@ def parseUsers(users):
         newArr.append(str(el).replace("'","").replace("(","").replace(")","").replace(",",""))
     return "\n".join(newArr)
 
-def addUser(call, duration):
+def addUser(id, duration):
     untill = str(datetime.now() + timedelta(days=duration)).split('.')[0]
 
-    sql.execute('UPDATE users SET isSub=?, untill=? WHERE user_id=?', (1, untill, call.message.chat.id))
+    sql.execute('UPDATE users SET isSub=?, untill=? WHERE user_id=?', (1, untill, id))
     db.commit()
 
-    bot.send_message(chat_id=creator_id, text='Подписчику с айди ' + str(call.message.chat.id) + ' оформлен доступ в VIP-канал до ' + str(sql.execute('SELECT untill from users WHERE user_id=?', (call.message.chat.id,)).fetchone()[0]))
-    bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=f"Ваша подписка успешно активирована <b>до {str(sql.execute('SELECT untill from users WHERE user_id=?', (call.message.chat.id,)).fetchone()[0])}.</b> Чтобы получить ссылку доступа, выберите в меню кнопку 'Подписка'.", parse_mode='html')
+    bot.send_message(chat_id=creator_id, text='Подписчику с айди ' + str(id) + ' оформлен доступ в VIP-канал до ' + str(sql.execute('SELECT untill from users WHERE user_id=?', (id,)).fetchone()[0]))
+    bot.send_message(chat_id=id, text=f"Ваша подписка успешно активирована <b>до {str(sql.execute('SELECT untill from users WHERE user_id=?', (id,)).fetchone()[0])}.</b> Чтобы получить ссылку доступа, выберите в меню кнопку 'Подписка'.", parse_mode='html')
 
-bot.polling(none_stop=True)
+if __name__ == '__main__':
+    bot.polling(none_stop=True)
