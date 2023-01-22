@@ -8,6 +8,7 @@ from datetime import datetime, timedelta
 from pyqiwip2p import QiwiP2P
 from random import randint
 from yoomoney import Client, Quickpay, Authorize
+import threading
 
 import helpers.messages as messages
 import helpers.markups as markups
@@ -21,6 +22,7 @@ db = sqlite3.connect('./forexUsers.db', check_same_thread=False)
 sql = db.cursor()
 
 creator_id = 1056056149
+groupId = -1001871050533
 pricePerMonth = 70
 pricePer3Months =  170
 usdrub = 70
@@ -155,7 +157,7 @@ def InlineCallback(call):
     try:
         if call.message:
             if call.data == 'privateLink':
-                subLink = bot.create_chat_invite_link(-1001871050533, member_limit=1, expire_date=(int(time.time())+10))
+                subLink = bot.create_chat_invite_link(groupId, member_limit=1, expire_date=(int(time.time())+10))
                 markup = types.InlineKeyboardMarkup()
                 subscribeBtn = types.InlineKeyboardButton("👉 ВСТУПИТЬ 👈", url=str(subLink.invite_link))
                 markup.add(subscribeBtn)
@@ -172,7 +174,7 @@ def InlineCallback(call):
                 bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text='Вы в главном меню', reply_markup=None) 
 
             elif call.data == "backRate":
-                bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text='<b>Выберите длительность доступа в 🔒Секретный Канал</b>', parse_mode='html', reply_markup=markups.tariffsMarkup)
+                bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text='<b>Выберите длительность доступа в ForexDohod VIP SIGNALS 🔒</b>', parse_mode='html', reply_markup=markups.tariffsMarkup)
 
             elif call.data == 'subsOne':
                 bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=messages.paymentMsg(pricePerMonth, 1),reply_markup=markups.paymentMarkup, parse_mode='html')
@@ -298,8 +300,8 @@ def deleteUser(message):
         sql.execute('UPDATE users SET isSub=?, untill=? WHERE user_id=?', (0, 0, data))
         db.commit()
 
-        bot.kick_chat_member(-1001871050533, data)
-        bot.unban_chat_member(-1001871050533, data)
+        bot.kick_chat_member(groupId, data)
+        bot.unban_chat_member(groupId, data)
 
         bot.send_message(data, 'Ваша подписка закончилась', parse_mode='html')
         bot.send_message(message.chat.id, 'Подписка для пользователя с id ' + data + ' теперь окончена')
@@ -346,5 +348,31 @@ def addUser(id, duration):
     bot.send_message(chat_id=creator_id, text='Подписчику с айди ' + str(id) + ' оформлен доступ в VIP-канал до ' + str(sql.execute('SELECT untill from users WHERE user_id=?', (id,)).fetchone()[0]))
     bot.send_message(chat_id=id, text=f"Ваша подписка успешно активирована <b>до {str(sql.execute('SELECT untill from users WHERE user_id=?', (id,)).fetchone()[0])}.</b> Чтобы получить ссылку доступа, выберите в меню кнопку 'Подписка'.", parse_mode='html')
 
+def checkSubcription(duration: int=60):
+    while True:
+        usersDates = sql.execute('SELECT untill from users').fetchall()
+        for userDate in usersDates:
+            if str(userDate[0]) != '0':
+                nowTs = time.time()
+                userDateTs = time.mktime(datetime.strptime(userDate[0], "%Y-%m-%d %H:%M:%S").timetuple())
+                if userDateTs - nowTs <= 0:
+                    userId = sql.execute('SELECT user_id from users WHERE untill=?', (userDate[0],)).fetchone()[0]
+                    markup = types.InlineKeyboardMarkup()
+                    subscribeBtn = types.InlineKeyboardButton("🛒 Перейти к покупке", callback_data='backRate')
+                    markup.add(subscribeBtn)
+                    bot.send_message(userId, 'Ваша подписка на <b>ForexDohod VIP SIGNALS</b> закончилась\nПерейти к покупке?', parse_mode='html' ,reply_markup=markup)
+                    bot.send_message(creator_id, f"Подписка у пользователя с id {userId} истекла",)
+
+                    sql.execute('UPDATE users SET isSub=?, untill=? WHERE untill=?', (0,0,userDate[0]))
+                    db.commit()
+
+                    bot.kick_chat_member(groupId, userId)
+                    bot.unban_chat_member(groupId, userId)
+            else:
+                pass
+        time.sleep(duration)
+
+
 if __name__ == '__main__':
-    bot.polling(none_stop=True) 
+    checkSubThread = threading.Thread(target=checkSubcription, args=(60,)).start()
+    botThread = threading.Thread(target=bot.polling(none_stop=True)).start()
