@@ -7,6 +7,7 @@ from telebot import types
 from datetime import datetime, timedelta
 from pyqiwip2p import QiwiP2P
 from random import randint
+from yoomoney import Client, Quickpay, Authorize
 
 import helpers.messages as messages
 import helpers.markups as markups
@@ -14,17 +15,16 @@ import helpers.markups as markups
 
 ###  MAIN CONSTANTS  ###
 bot = telebot.TeleBot(config.BOT_TOKEN)
+p2p = QiwiP2P(auth_key=config.QIWI_TOKEN) #qiwi payment
+yooClient = Client(config.YOOMONEY_TOKEN) #yoomoney payment
 db = sqlite3.connect('./forexUsers.db', check_same_thread=False)
 sql = db.cursor()
-p2p = QiwiP2P(auth_key=config.QIWI_TOKEN)
 
 creator_id = 1056056149
 pricePerMonth = 70
 pricePer3Months =  170
 usdrub = 70
 walletAddress = 'TRoha2nsRGVDeDQomuFhtCXBo1uRBqs2W5'
-cardNumber = '2200700408479524'
-qiwiNumber = '+79260534553'
 
 
 ###  START MESSAGE  ###
@@ -180,21 +180,21 @@ def InlineCallback(call):
             elif call.data == 'subsThree':
                 bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=messages.paymentMsg(pricePer3Months, 3),reply_markup=markups.paymentMarkup3, parse_mode='html')             
                 
-            elif call.data == "usdt" or call.data == 'card':
-                messages.paymentWayMsg(bot, pricePerMonth, walletAddress, qiwiNumber, cardNumber, 1, call, None)
+            elif call.data == "usdt":
+                messages.paymentWayMsg(bot, pricePerMonth, walletAddress, 1, call, None, None)
 
-            elif call.data == "usdt3" or call.data == 'card3':
-                messages.paymentWayMsg(bot, pricePer3Months, walletAddress, qiwiNumber, cardNumber, 3, call, None)
+            elif call.data == "usdt3":
+                messages.paymentWayMsg(bot, pricePer3Months, walletAddress, 3, call, None, None)
 
             elif call.data == 'qiwi':
                 comment = str(call.message.chat.id) + '_' + str(randint(1000, 9999))
                 bill = p2p.bill(amount=int(pricePerMonth)*int(usdrub), lifetime=15, comment=comment)
-                messages.paymentWayMsg(bot, pricePerMonth, walletAddress, qiwiNumber, cardNumber, 1, call, bill)
+                messages.paymentWayMsg(bot, pricePerMonth, None, 1, call, bill.pay_url, bill.bill_id)
 
             elif call.data == 'qiwi3':
                 comment = str(call.message.chat.id) + '_' + str(randint(1000, 9999))
                 bill = p2p.bill(amount=int(pricePer3Months)*int(usdrub), lifetime=15, comment=comment)
-                messages.paymentWayMsg(bot, pricePer3Months, walletAddress, qiwiNumber, cardNumber, 3, call, bill)
+                messages.paymentWayMsg(bot, pricePer3Months, None, 3, call, bill.pay_url, bill.bill_id)
 
             elif 'PyQiwiP2P' in call.data:
                 data = call.data.split('_')
@@ -208,6 +208,45 @@ def InlineCallback(call):
                         addUser(call.message.chat.id, 90)
                     elif p2p.check(data[0]).status != 'PAID':
                         bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text='<b>Счет не оплачен, попробуйте повторить попытку.</b>',reply_markup=None, parse_mode='html')  
+
+            elif call.data == 'yooMoney':
+                balance = yooClient.account_info().balance
+                quickpay = Quickpay(
+                    receiver=config.YOOMONEY_ID,
+                    quickpay_form="shop",
+                    targets="Sponsor this project",
+                    paymentType="SB",
+                    sum=int(pricePerMonth)*int(usdrub),
+                    label=str(balance)
+                    )
+                bot.send_message(call.message.chat.id, messages.paymentWayMsg(bot, pricePerMonth, None, 1, call, pay_url=quickpay.redirected_url, bill_id=balance), parse_mode='html')
+
+            elif call.data == 'yooMoney3':
+                balance = yooClient.account_info().balance
+                quickpay = Quickpay(
+                    receiver=config.YOOMONEY_ID,
+                    quickpay_form="shop",
+                    targets="Sponsor this project",
+                    paymentType="SB",
+                    sum=int(pricePer3Months)*int(usdrub),
+                    label=str(balance)
+                    )
+                bot.send_message(call.message.chat.id, messages.paymentWayMsg(bot, pricePer3Months, None, 3, call, pay_url=quickpay.redirected_url, bill_id=balance), parse_mode='html')
+
+            elif 'yooP2P' in call.data:
+                data = call.data.split('_')
+                prevBalance = data[0]
+                newBalance = yooClient.account_info().balance
+                if data[2] == '1':
+                    if (float(newBalance)-float(prevBalance)) > ((float(pricePerMonth)*float(usdrub))-0.05*(float(pricePerMonth)*float(usdrub))):
+                        addUser(call.message.chat.id, 30)
+                    else:
+                        bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text='<b>Счет не оплачен, попробуйте повторить попытку.</b>',reply_markup=None, parse_mode='html')  
+                elif data[2] == '3':
+                    if (float(newBalance)-float(prevBalance)) > ((float(pricePer3Months)*float(usdrub))-0.05*(float(pricePer3Months)*float(usdrub))):
+                        addUser(call.message.chat.id, 90)
+                    else:
+                        bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text='<b>Счет не оплачен, попробуйте повторить попытку.</b>',reply_markup=None, parse_mode='html')
 
     except Exception as e:
         print(repr(e))

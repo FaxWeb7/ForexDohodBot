@@ -33,23 +33,23 @@ def paymentMsg(price, duration):
 def statisticMsg(users, privateUsers, parseUsers, usersId, privateUsersId):
     return f'<b>Статистика пользователей ForexDohodBot</b>\n\nКоличество пользователей: {str(len(users))}\nКоличество пользоватей с подпиской: {str(len(privateUsers))}\nПроцент пользователей с подпиской: {round((len(privateUsers)/len(users))*100, 2)}%\n\nИнформация о пользователях без подписки:\n{parseUsers(usersId)}\n\nИнформация о пользователях с подпиской (id, user_id, isSub, untill):\n{parseUsers(privateUsersId)}\n\nИнформация о всех пользователях (id, user_id, isSub, untill):\n{parseUsers(users)}'
 
-def paymentWayMsg(bot, price, walletAddress, qiwiNumber, cardNumber, duration, call, bill):
+def paymentWayMsg(bot, price, walletAddress, duration, call, pay_url, bill_id):
     if duration == 1:
         if call.data == 'usdt':
             bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=f'Способ оплаты: USDT TRC20\nСумма к оплате: *{price} USDT*\nДля оплаты переведите указанную сумму Подписки на этот адрес кошелька:\n\n`{walletAddress}` (нажмите,адрес кошелька скопируется)\n\nЭто можно сделать, например, в популярной бирже Бинанс. Напротив валюты USDT нажмите кнопку "Вывод" и введите адрес, который указан выше.\n\nОбратите внимание на *сеть* криптовалюты: *TRC20*.', reply_markup=markups.paymentDesc ,parse_mode='MARKDOWN')
         
-        if call.data == 'card':
-            bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=f'Способ оплаты: Оплата картой\nСумма к оплате: *{price} USD*\nДля оплаты переведите указанную сумму Подписки на этот номер карты:\n\n`{cardNumber}` (нажмите, номер карты скопируется)\n\n*Обратите внимание на то, что вы должны рассчитать количество рублей*, чтобы сумма совпадала с ценой подписки.', reply_markup=markups.paymentDesc ,parse_mode='MARKDOWN')
+        if call.data == 'yooMoney':
+            bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=f'Способ оплаты: YooMoney\nСумма к оплате: *{price} USD*\n\nДля оплаты перейдите по ссылке ниже.', reply_markup=markups.paymentYooDesc(pay_url, bill_id) ,parse_mode='MARKDOWN')
 
         if call.data == 'qiwi':
-            bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=f'Способ оплаты: QIWI\nСумма к оплате: *{price} USD*\n\nДля оплаты перейдите по ссылке ниже.', reply_markup=markups.paymentQiwiDesc(bill.pay_url, bill.bill_id) ,parse_mode='MARKDOWN')
+            bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=f'Способ оплаты: QIWI\nСумма к оплате: *{price} USD*\n\nДля оплаты перейдите по ссылке ниже.', reply_markup=markups.paymentQiwiDesc(pay_url, bill_id) ,parse_mode='MARKDOWN')
         
     elif duration == 3:
         if call.data == 'usdt3':
             bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=f'Способ оплаты: USDT TRC20\nСумма к оплате: *{price} USDT*\nДля оплаты переведите указанную сумму Подписки на этот адрес кошелька:\n\n`{walletAddress}` (нажмите,адрес кошелька скопируется)\n\nЭто можно сделать, например, в популярной бирже Бинанс. Напротив валюты USDT нажмите кнопку "Вывод" и введите адрес, который указан выше.\n\nОбратите внимание на *сеть* криптовалюты: *TRC20*.', reply_markup=markups.paymentDesc3 ,parse_mode='MARKDOWN')
 
-        elif call.data == 'card3':
-            bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=f'Способ оплаты: Оплата картой\nСумма к оплате: *{price} USD*\nДля оплаты переведите указанную сумму Подписки на этот номер карты:\n\n`{cardNumber}` (нажмите, номер карты скопируется)\n\n*Обратите внимание на то, что вы должны рассчитать количество рублей*, чтобы сумма совпадала с ценой подписки.', reply_markup=markups.paymentDesc3 ,parse_mode='MARKDOWN')
+        elif call.data == 'yooMoney3':
+            bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=f'Способ оплаты: YooMoney\nСумма к оплате: *{price} USD*\n\nДля оплаты перейдите по ссылке ниже.', reply_markup=markups.paymentYooDesc3(pay_url, bill_id) ,parse_mode='MARKDOWN')
 
         elif call.data == 'qiwi3':
-            bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=f'Способ оплаты: QIWI\nСумма к оплате: *{price} USD*\n\nДля оплаты перейдите по ссылке ниже.', reply_markup=markups.paymentQiwiDesc3(bill.pay_url, bill.bill_id) ,parse_mode='MARKDOWN')
+            bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=f'Способ оплаты: QIWI\nСумма к оплате: *{price} USD*\n\nДля оплаты перейдите по ссылке ниже.', reply_markup=markups.paymentQiwiDesc3(pay_url, bill_id) ,parse_mode='MARKDOWN')

@@ -26,17 +26,17 @@ subsThree = types.InlineKeyboardButton("3 Месяца (-20%)", callback_data='s
 backMenu = types.InlineKeyboardButton("◀ Назад", callback_data='backMenu')
 tariffsMarkup = types.InlineKeyboardMarkup(row_width=1).add(subsOne, subsThree, backMenu)
 
-qiwi = types.InlineKeyboardButton("Qiwi (Быстрее всего)", callback_data='qiwi')
+qiwi = types.InlineKeyboardButton("Qiwi", callback_data='qiwi')
+yooMoney = types.InlineKeyboardButton("YooMoney", callback_data='yooMoney')
 usdt = types.InlineKeyboardButton("USDT TRC20", callback_data='usdt')
-card = types.InlineKeyboardButton("По номеру карты", callback_data='card')
 backRate = types.InlineKeyboardButton("◀ Назад", callback_data='backRate')
-paymentMarkup = types.InlineKeyboardMarkup(row_width=1).add(qiwi,usdt, card, backRate)
+paymentMarkup = types.InlineKeyboardMarkup(row_width=1).add(qiwi, yooMoney,usdt, backRate)
 
-qiwi3 = types.InlineKeyboardButton("Qiwi (Быстрее всего)", callback_data='qiwi3')
+qiwi3 = types.InlineKeyboardButton("Qiwi", callback_data='qiwi3')
+yooMoney3 = types.InlineKeyboardButton("YooMoney", callback_data='yooMoney3')
 usdt3 = types.InlineKeyboardButton("USDT TRC20", callback_data='usdt3')
-card3 = types.InlineKeyboardButton("По номеру карты", callback_data='card3')
 backRate3 = types.InlineKeyboardButton("◀ Назад", callback_data='backRate')
-paymentMarkup3 = types.InlineKeyboardMarkup(row_width=1).add(qiwi3, usdt3, card3, backRate3)
+paymentMarkup3 = types.InlineKeyboardMarkup(row_width=1).add(qiwi3, yooMoney3, usdt3, backRate3)
 
 payment = types.InlineKeyboardButton("✅ Я оплатил", callback_data='payment')
 backPrice = types.InlineKeyboardButton("❌ Отменить", callback_data='subsOne')
@@ -59,5 +59,17 @@ def paymentQiwiDesc (billUrl, billId):
 def paymentQiwiDesc3 (billUrl, billId): 
     payment = types.InlineKeyboardButton("Ссылка на оплату", url=billUrl, callback_data='paymentQiwi3')
     confirm = types.InlineKeyboardButton("Подтвердить оплату", callback_data=f'{str(billId)}_3')
+    backPrice = types.InlineKeyboardButton("❌ Отменить", callback_data='subsThree')
+    return types.InlineKeyboardMarkup(row_width=1).add(payment, confirm, backPrice)
+
+def paymentYooDesc (billUrl, billId): 
+    payment = types.InlineKeyboardButton("Ссылка на оплату", url=billUrl, callback_data='paymentYoo')
+    confirm = types.InlineKeyboardButton("Подтвердить оплату", callback_data=f'{str(billId)}_yooP2P_1')
+    backPrice = types.InlineKeyboardButton("❌ Отменить", callback_data='subsOne')
+    return types.InlineKeyboardMarkup(row_width=1).add(payment, confirm, backPrice)
+
+def paymentYooDesc3 (billUrl, billId): 
+    payment = types.InlineKeyboardButton("Ссылка на оплату", url=billUrl, callback_data='paymentYoo')
+    confirm = types.InlineKeyboardButton("Подтвердить оплату", callback_data=f'{str(billId)}_yooP2P_3')
     backPrice = types.InlineKeyboardButton("❌ Отменить", callback_data='subsThree')
     return types.InlineKeyboardMarkup(row_width=1).add(payment, confirm, backPrice)
