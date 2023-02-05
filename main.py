@@ -6,7 +6,7 @@ import helpers.messages as messages
 import helpers.markups as markups
 
 bot = telebot.TeleBot(config.BOT_TOKEN)
-db = sqlite3.connect('./forexUsers.db', check_same_thread=False)
+db = sqlite3.connect('../forexUsers.db', check_same_thread=False)
 sql = db.cursor()
 creator_id = 1056056149
 
