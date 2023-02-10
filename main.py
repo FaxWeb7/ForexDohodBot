@@ -11,6 +11,7 @@ sql = db.cursor()
 creator_id = 1056056149
 
 priceGold = '100.000'
+priceCurrency = '80.000'
 priceGoldMini = '40.000'
 
 @bot.message_handler(commands=['start'])
@@ -29,11 +30,7 @@ def welcome(message):
 def Buttons(message):
     if message.chat.type == 'private':
         if message.text == 'Статистика доходности':
-            bot.send_photo(message.chat.id, caption=messages.profitabilityMsg, parse_mode='html', photo=open('./assets/rate.jpg', 'rb'))
-            bot.send_document(message.chat.id, document=open('./assets/GOLD.htm', 'rb'))
-            bot.send_document(message.chat.id, document=open('./assets/GOLD.gif', 'rb'))
-            bot.send_document(message.chat.id, document=open('./assets/GOLDmini.htm', 'rb'))
-            bot.send_document(message.chat.id, document=open('./assets/GOLDmini.gif', 'rb'))
+            bot.send_photo(message.chat.id, caption=messages.profitabilityMsg, parse_mode='html', photo=open('./assets/rate.jpg', 'rb'), reply_markup=markups.statMarkup)
 
         elif message.text == '🗞️ Бесплатный канал':
             bot.send_message(message.chat.id, messages.freeChannelMsg, parse_mode='html')
@@ -90,11 +87,14 @@ def InlineCallback(call):
             elif call.data == 'subsGold':
                 bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=messages.paymentMsg(priceGold, 'gold'), parse_mode='html', reply_markup=markups.paymentMarkup)
 
+            elif call.data == 'subsCurrency':
+                bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=messages.paymentMsg(priceCurrency, 'currency'), parse_mode='html', reply_markup=markups.paymentMarkup)
+
             elif call.data == 'subsGoldMini':
                 bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=messages.paymentMsg(priceGoldMini, 'goldMini'), parse_mode='html', reply_markup=markups.paymentMarkup)
 
-            elif call.data == 'docBtn':
-                bot.send_message(creator_id, f'Пользователь с айди <b>{call.message.chat.id}</b> открыл чат с DOC по поводу покупки торгового робота', parse_mode='html')
+            elif call.data == 'subsDifference':
+                bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=messages.paymentMsg(0, 'difference'), parse_mode='html', reply_markup=markups.differenceMarkup)
 
     except Exception as e:
         print(repr(e))
