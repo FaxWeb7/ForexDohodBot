@@ -12,8 +12,9 @@ menuAdminMarkup = types.ReplyKeyboardMarkup(resize_keyboard=True, row_width=2).r
 
 statistic = types.KeyboardButton("Статистика пользователей")
 mailing = types.KeyboardButton("Рассылка по пользователям")
+findUser = types.KeyboardButton("Поиск по user_id")
 back = types.KeyboardButton("◀ Назад")
-adminMarkup = types.ReplyKeyboardMarkup(resize_keyboard=True, row_width=2).add(statistic, mailing, back)
+adminMarkup = types.ReplyKeyboardMarkup(resize_keyboard=True, row_width=2).add(statistic, mailing, findUser).row(back)
 
 ### INLINE MARKUPS ###
 subsCurrency = types.InlineKeyboardButton("Золотой Робот (-20%)", callback_data='subsGold')

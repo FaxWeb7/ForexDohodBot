@@ -71,6 +71,13 @@ def Buttons(message):
             else:
                 bot.send_message(message.chat.id, 'Эта функция недоступна для вас')
 
+        elif message.text == 'Поиск по user_id':
+            if message.chat.id == creator_id:
+                msg = bot.send_message(message.chat.id, 'Введите id пользователя')
+                bot.register_next_step_handler(msg, findUser)
+            else:
+                bot.send_message(message.chat.id, 'Эта функция недоступна для вас')
+
 
 
 ###  INLINE CALLBACKS  ###
@@ -114,6 +121,12 @@ def writeMailing(message):
             bot.send_message(chat_id=creator_id, text='Рассылка прошла успешно!', parse_mode='html')
     else:
         bot.send_message(creator_id, 'Рассылка отменена', parse_mode='html')
+
+def findUser(message):
+    if sql.execute('SELECT * from users WHERE user_id = ?', (message.text,)).fetchone() != None:
+        bot.send_message(chat_id=creator_id, text='Пользователь с таким id найден!', parse_mode='html')
+    else:
+        bot.send_message(chat_id=creator_id, text='Пользователь не найден :(', parse_mode='html')
 
 if __name__ == '__main__':
     bot.polling(none_stop=True)
