@@ -8,7 +8,7 @@ import helpers.markups as markups
 bot = telebot.TeleBot(config.BOT_TOKEN)
 db = sqlite3.connect('../forexUsers.db', check_same_thread=False)
 sql = db.cursor()
-creator_id = 1056056149
+creator_id = 6046075760
 
 priceGold = '100.000'
 priceCurrency = '80.000'
