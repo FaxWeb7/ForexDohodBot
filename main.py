@@ -126,7 +126,7 @@ def findUser(message):
     if sql.execute('SELECT * from users WHERE user_id = ?', (message.text,)).fetchone() != None:
         bot.send_message(chat_id=creator_id, text='Пользователь с таким id найден!', parse_mode='html')
     else:
-        bot.send_message(chat_id=creator_id, text='Пользователь не найден :(', parse_mode='html')
+        bot.send_message(chat_id=creator_id, text='Пользователь не найден (первые 263 юзера не учитываются)', parse_mode='html')
 
 if __name__ == '__main__':
     bot.polling(none_stop=True)
