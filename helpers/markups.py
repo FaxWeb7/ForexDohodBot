@@ -28,7 +28,7 @@ goldStat = types.InlineKeyboardButton("⚜️ Статистика Золото�
 currStat = types.InlineKeyboardButton("💶 Статистика Валютного Робота", url='https://www.myfxbook.com/members/Maximilian777/clever-10000/9488108')
 statMarkup = types.InlineKeyboardMarkup(row_width=1).add(goldStat, currStat)
 
-linkBtn = types.InlineKeyboardButton("✉️ Обсудить детали оплаты с админом", url='t.me/@faxweb_w')
+linkBtn = types.InlineKeyboardButton("✉️ Обсудить детали оплаты с админом", url='t.me/@forexdohod_owner')
 backRate = types.InlineKeyboardButton("◀ Назад", callback_data='backRate')
 paymentMarkup = types.InlineKeyboardMarkup(row_width=1).add(linkBtn, backRate)
 differenceMarkup = types.InlineKeyboardMarkup(row_width=1).add(backRate)
