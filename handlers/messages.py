@@ -1,4 +1,4 @@
-import helpers.markups as markups
+import handlers.markups as markups
 
 ### STRING MESSAGES ###
 

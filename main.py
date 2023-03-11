@@ -2,8 +2,8 @@ import telebot
 import config
 import sqlite3
 from telebot import types
-import helpers.messages as messages
-import helpers.markups as markups
+import handlers.messages as messages
+import handlers.markups as markups
 
 bot = telebot.TeleBot(config.BOT_TOKEN)
 db = sqlite3.connect('../forexUsers.db', check_same_thread=False)
@@ -12,7 +12,7 @@ creator_id = 6046075760
 
 priceGold = '100.000'
 priceCurrency = '80.000'
-priceGoldMini = '40.000'
+priceGoldMini = '50.000'
 
 @bot.message_handler(commands=['start'])
 def welcome(message):
