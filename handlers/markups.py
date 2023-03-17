@@ -17,14 +17,14 @@ back = types.KeyboardButton("◀ Назад")
 adminMarkup = types.ReplyKeyboardMarkup(resize_keyboard=True, row_width=2).add(statistic, mailing, findUser).row(back)
 
 ### INLINE MARKUPS ###
-subsCurrency = types.InlineKeyboardButton("Золотой Робот (-20%)", callback_data='subsGold')
+subsCurrency = types.InlineKeyboardButton("Золотой-про Робот (-20%)", callback_data='subsGold')
 subsGold = types.InlineKeyboardButton("Валютный Робот (-20%)", callback_data='subsCurrency')
 subsGoldMini = types.InlineKeyboardButton("Мини-Золотой Робот (-15%)", callback_data='subsGoldMini')
 subsDifference = types.InlineKeyboardButton("В чём их отличия?", callback_data='subsDifference')
 backMenu = types.InlineKeyboardButton("◀ Назад", callback_data='backMenu')
 tariffsMarkup = types.InlineKeyboardMarkup(row_width=1).add(subsCurrency, subsGold, subsGoldMini, subsDifference, backMenu)
 
-goldStat = types.InlineKeyboardButton("⚜️ Статистика Золотого Робота", url='https://www.myfxbook.com/members/Maximilian777/clever-gold/9534287')
+goldStat = types.InlineKeyboardButton("⚜️ Статистика Золотых Роботов", url='https://www.myfxbook.com/members/Maximilian777/gold-mini/10010252')
 currStat = types.InlineKeyboardButton("💶 Статистика Валютного Робота", url='https://www.myfxbook.com/members/Maximilian777/clever-10000/9488108')
 statMarkup = types.InlineKeyboardMarkup(row_width=1).add(goldStat, currStat)
 
